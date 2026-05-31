@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database 2 — TDE Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4efe4; --paper2:#faf7ef; --card:#fffdf8; --ink:#241f18; --ink-soft:#6b6255;
+    --line:#e4dccb; --line2:#d8cfba;
+    --d-low:#2f9e63; --d-mid:#e0992a; --d-high:#cf3a2c; --d-none:#aeb7c4; --todo:#ddd4c2;
+    --rank:#c2410c; --conc:#2257c4; --trig:#0d8a6a; --phys:#7b4ad1; --jpa:#a8551b; --theo:#5a6577;
+    --shadow:0 1px 2px rgba(50,40,20,.05),0 12px 28px -14px rgba(70,55,25,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Spline Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);
+    line-height:1.5;padding:clamp(16px,4vw,48px);
+    background-image:radial-gradient(circle at 12% 18%,rgba(194,65,12,.04),transparent 38%),radial-gradient(circle at 88% 8%,rgba(34,87,196,.045),transparent 42%);
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{margin-bottom:clamp(22px,4vw,40px)}
+  .kicker{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(34px,8vw,62px);line-height:.96;letter-spacing:-.02em}
+  h1 em{font-style:italic;font-weight:400;color:var(--rank)}
+  .sub{color:var(--ink-soft);margin-top:12px;max-width:48ch;font-size:15px}
+
+  .grid-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:28px 0}
+  @media(max-width:720px){.grid-stats{grid-template-columns:1fr;gap:12px}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+  .stat{padding:20px;display:flex;align-items:center;gap:18px}
+  .stat .meta{flex:1;min-width:0}
+  .stat .t{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .stat .big{font-family:'Fraunces',serif;font-weight:600;font-size:30px;line-height:1.1;margin-top:2px}
+  .stat .leg{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+  .stat .leg span{font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:3px;flex:none}
+
+  .section-h{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:36px 0 16px;display:flex;align-items:baseline;gap:12px}
+  .section-h .n{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);letter-spacing:.1em}
+  .section-h .hint{font-family:'Spline Sans';font-size:12.5px;font-weight:400;color:var(--ink-soft);margin-left:auto}
+
+  .grid-topics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:720px){.grid-topics{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:420px){.grid-topics{grid-template-columns:1fr}}
+  .topic{padding:16px;display:flex;gap:14px;align-items:center;position:relative;overflow:hidden}
+  .topic.hot{box-shadow:var(--shadow),inset 4px 0 0 var(--d-high)}
+  .topic .meta{flex:1;min-width:0}
+  .topic .name{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px}
+  .topic .frac{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:3px}
+  .topic .mix{font-size:11.5px;margin-top:6px;display:flex;gap:9px;flex-wrap:wrap}
+  .topic .mix b{font-weight:600}
+
+  .review{padding:18px 20px}
+  .review .row{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--line)}
+  .review .row:first-child{border-top:none}
+  .review .badge{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:20px;color:#fff;flex:none}
+  .review .when{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);flex:none;width:92px}
+  .review .what{flex:1;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;min-width:0}
+  .review .empty{color:var(--ink-soft);font-size:14px;text-align:center;padding:10px 0}
+
+  .tde{margin-bottom:12px;overflow:hidden}
+  .tde-head{padding:15px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
+  .tde-head .date{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
+  .tde-head .pill{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);padding:2px 9px;border-radius:20px}
+  .tde-head .spacer{flex:1}
+  .bar{width:96px;height:7px;border-radius:6px;background:var(--todo);overflow:hidden;flex:none;display:flex}
+  .bar i{display:block;height:100%;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+  .chev{transition:transform .25s;color:var(--ink-soft);font-size:13px}
+  .tde.open .chev{transform:rotate(90deg)}
+  .ex-list{display:none;border-top:1px solid var(--line);padding:6px 10px 12px}
+  .tde.open .ex-list{display:block}
+  .ex{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;flex-wrap:wrap}
+  .ex:hover{background:var(--paper2)}
+  .ex .lt{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);width:18px;flex:none}
+  .ex .ty{flex:1 1 130px;font-size:14px;display:flex;align-items:center;gap:8px;min-width:0}
+  .ex .ty b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ctrls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .toggle{font-family:'Spline Sans',sans-serif;font-size:12px;font-weight:500;border:1px solid var(--line2);background:var(--paper2);color:var(--ink-soft);
+    padding:5px 11px;border-radius:20px;cursor:pointer;transition:all .15s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+  .toggle:active{transform:scale(.95)}
+  .toggle.on-done{background:var(--ink);border-color:var(--ink);color:#fff}
+  .diffset{display:flex;gap:4px}
+  .diffset.dis{opacity:.35;pointer-events:none}
+  .dpill{font-size:11.5px;font-weight:600;border:1px solid var(--line2);background:var(--paper2);color:var(--ink-soft);
+    padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+  .dpill:active{transform:scale(.95)}
+  .dpill.on.b{background:var(--d-low);border-color:var(--d-low);color:#fff}
+  .dpill.on.m{background:var(--d-mid);border-color:var(--d-mid);color:#fff}
+  .dpill.on.a{background:var(--d-high);border-color:var(--d-high);color:#fff}
+  .ex.b{background:linear-gradient(90deg,rgba(47,158,99,.09),transparent)}
+  .ex.m{background:linear-gradient(90deg,rgba(224,153,42,.11),transparent)}
+  .ex.a{background:linear-gradient(90deg,rgba(207,58,44,.12),transparent)}
+
+  footer{margin-top:34px;text-align:center;color:var(--ink-soft);font-size:12.5px;font-family:'IBM Plex Mono',monospace}
+  .reset{margin-top:14px;background:none;border:1px solid var(--line2);color:var(--ink-soft);font-size:11.5px;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:'IBM Plex Mono',monospace}
+  .reset:hover{border-color:var(--d-high);color:var(--d-high)}
+  svg .donut-seg{transition:stroke-dasharray .5s cubic-bezier(.2,.8,.2,1)}
+  .donut-wrap{position:relative;flex:none}
+  .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .donut-center .pc{font-family:'Fraunces',serif;font-weight:600;line-height:1}
+  .donut-center .lb{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Politecnico · Basi di Dati 2</div>
+    <h1>TDE <em>Tracker</em></h1>
+    <p class="sub">Per ogni esercizio segna <b>Fatto</b> e la <b>difficoltà riscontrata</b>. I grafici evidenziano gli argomenti più ostici, e la lista "Da ripassare" raccoglie i punti deboli.</p>
+  </header>
+
+  <div class="grid-stats" id="stats"></div>
+
+  <div class="section-h"><span class="n">01</span> Difficoltà per argomento<span class="hint">ordinati dal più ostico ↓</span></div>
+  <div class="grid-topics" id="topics"></div>
+
+  <div class="section-h"><span class="n">02</span> Da ripassare<span class="hint">esercizi a difficoltà media / alta</span></div>
+  <div class="card review" id="review"></div>
+
+  <div class="section-h"><span class="n">03</span> Tutti i TDE</div>
+  <div id="tdelist"></div>
+
+  <footer>
+    <div id="fnote"></div>
+    <button class="reset" onclick="resetAll()">↺ Azzera progressi</button>
+  </footer>
+</div>
+
+<script>
+const TYPE_COLORS={"Ranking":"var(--rank)","Concurrency control":"var(--conc)","Triggers":"var(--trig)","Physical DB":"var(--phys)","JPA":"var(--jpa)","Theory":"var(--theo)"};
+const DIFF_COLORS={b:"var(--d-low)",m:"var(--d-mid)",a:"var(--d-high)"};
+const DIFF_LABEL={b:"Bassa",m:"Media",a:"Alta"};
+const RAW=[
+ ["2022-01-14",["Ranking","Concurrency control","Triggers","JPA"]],
+ ["2022-02-04",["Ranking","Physical DB","Triggers","JPA"]],
+ ["2022-06-27",["Ranking","Concurrency control","Triggers","JPA"]],
+ ["2022-07-15",["Ranking","Physical DB","Triggers","JPA"]],
+ ["2022-09-01",["Concurrency control","Physical DB","Triggers","JPA"]],
+ ["2023-01-23",["Concurrency control","Physical DB","Ranking","JPA"]],
+ ["2023-02-16",["Concurrency control","Ranking","Physical DB","Triggers"]],
+ ["2023-06-23",["Concurrency control","Ranking","JPA","Physical DB"]],
+ ["2023-07-17",["Concurrency control","Ranking","Triggers","JPA"]],
+ ["2023-09-12",["Concurrency control","Physical DB","Triggers","JPA"]],
+ ["2024-01-24",["Concurrency control","Ranking","JPA"]],
+ ["2024-02-12",["Triggers","Concurrency control","Physical DB"]],
+ ["2024-06-17",["Concurrency control","Ranking","Physical DB","Theory"]],
+ ["2024-07-17",["Concurrency control","Ranking","Triggers"]],
+ ["2025-01-15",["Concurrency control","Ranking","Physical DB"]],
+ ["2025-02-05",["Concurrency control","Ranking","JPA"]],
+ ["2025-06-04",["Concurrency control","Triggers","Physical DB"]],
+ ["2025-07-02",["Concurrency control","Ranking","Triggers"]],
+ ["2025-09-05",["Physical DB","Concurrency control","JPA"]],
+ ["2026-01-22",["Ranking","Concurrency control","JPA"]],
+ ["2026-02-13",["Ranking","Concurrency control","Physical DB"]],
+];
+const LETTERS="ABCDE";
+const MONTHS=["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const DATA=RAW.map(([iso,exs])=>{
+  const [y,m,d]=iso.split("-");
+  return {iso,label:`${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`,short:`${parseInt(d)}/${m}/${y.slice(2)}`,
+    exercises:exs.map((t,i)=>({id:`${iso}_${LETTERS[i]}`,letter:LETTERS[i],type:t}))};
+});
+
+const KEY="db2_tde_tracker_v2";
+let STATE={};
+try{const s=localStorage.getItem(KEY);if(s)STATE=JSON.parse(s);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(STATE));}catch(e){}}
+function st(id){return STATE[id]||{done:false,diff:null};}
+
+function setDone(id){const s=st(id);const n=!s.done;STATE[id]={done:n,diff:n?s.diff:null};save();renderAll();}
+function setDiff(id,lv){const s=st(id);const nd=s.diff===lv?null:lv;STATE[id]={done:true,diff:nd};save();renderAll();}
+function resetAll(){if(confirm("Azzerare tutti i progressi su questo dispositivo?")){STATE={};save();renderAll();}}
+
+function donut(segs,size,thick,centerMain,centerSub,mainColor){
+  const r=(size-thick)/2, c=2*Math.PI*r, total=segs.reduce((a,s)=>a+s.v,0)||1;
+  let off=0,arcs="";
+  segs.forEach(s=>{
+    const len=s.v/total*c;
+    arcs+=`<circle class="donut-seg" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${thick}" stroke-dasharray="${len.toFixed(2)} ${(c-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${size/2} ${size/2})"/>`;
+    off+=len;
+  });
+  return `<div class="donut-wrap" style="width:${size}px;height:${size}px">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--todo)" stroke-width="${thick}"/>${arcs}
+    </svg>
+    <div class="donut-center">
+      <div class="pc" style="font-size:${size*.28}px;color:${mainColor||'var(--ink)'}">${centerMain}</div>
+      ${centerSub?`<div class="lb" style="font-size:${Math.max(8,size*.085)}px;margin-top:2px">${centerSub}</div>`:""}
+    </div></div>`;
+}
+
+function tallyAll(){
+  let b=0,m=0,a=0,nr=0,todo=0,tot=0;
+  DATA.forEach(t=>t.exercises.forEach(e=>{const s=st(e.id);tot++;
+    if(s.done){if(s.diff==='b')b++;else if(s.diff==='m')m++;else if(s.diff==='a')a++;else nr++;}else todo++;}));
+  return {b,m,a,nr,todo,tot,done:b+m+a+nr};
+}
+function tdeStatus(t){let d=0;t.exercises.forEach(e=>{if(st(e.id).done)d++;});
+  return {done:d,tot:t.exercises.length,full:d===t.exercises.length&&d>0,started:d>0};}
+
+function renderStats(){
+  const x=tallyAll();
+  let tdeFull=0,tdePart=0;DATA.forEach(t=>{const s=tdeStatus(t);if(s.full)tdeFull++;else if(s.started)tdePart++;});
+  const tot=DATA.length, pcDone=Math.round(x.done/x.tot*100);
+  const diffSegs=[{v:x.b,color:'var(--d-low)'},{v:x.m,color:'var(--d-mid)'},{v:x.a,color:'var(--d-high)'},{v:x.nr,color:'var(--d-none)'}];
+  document.getElementById("stats").innerHTML=`
+  <div class="card stat">
+    ${donut(diffSegs,84,15,pcDone+"%","svolti")}
+    <div class="meta"><div class="t">Esercizi svolti</div><div class="big">${x.done}<span style="font-size:16px;color:var(--ink-soft)">/${x.tot}</span></div>
+      <div class="leg">
+        <span><i class="dot" style="background:var(--d-low)"></i>${x.b} bassa</span>
+        <span><i class="dot" style="background:var(--d-mid)"></i>${x.m} media</span>
+        <span><i class="dot" style="background:var(--d-high)"></i>${x.a} alta</span>
+        ${x.nr?`<span><i class="dot" style="background:var(--d-none)"></i>${x.nr} non valutata</span>`:""}
+      </div></div>
+  </div>
+  <div class="card stat">
+    ${donut([{v:tdeFull,color:'var(--conc)'},{v:tdePart,color:'#9db8ec'}],84,15,tdeFull+"","appelli")}
+    <div class="meta"><div class="t">TDE completati</div><div class="big">${tdeFull}<span style="font-size:16px;color:var(--ink-soft)">/${tot}</span></div>
+      <div class="leg">
+        <span><i class="dot" style="background:var(--conc)"></i>${tdeFull} finiti</span>
+        <span><i class="dot" style="background:#9db8ec"></i>${tdePart} iniziati</span>
+        <span><i class="dot" style="background:var(--todo)"></i>${tot-tdeFull-tdePart} intatti</span>
+      </div></div>
+  </div>
+  <div class="card stat">
+    ${donut([{v:x.b,color:'var(--d-low)'},{v:x.m,color:'var(--d-mid)'},{v:x.a,color:'var(--d-high)'}],84,15,x.a+"","tosti",'var(--d-high)')}
+    <div class="meta"><div class="t">Difficoltà alta</div><div class="big" style="color:var(--d-high)">${x.a}</div>
+      <div class="leg"><span style="color:var(--ink-soft)">esercizi su cui hai<br>faticato di più —<br>vedi "Da ripassare"</span></div></div>
+  </div>`;
+}
+
+function renderTopics(){
+  const types=["Ranking","Concurrency control","Triggers","Physical DB","JPA","Theory"];
+  const agg={};types.forEach(t=>agg[t]={b:0,m:0,a:0,nr:0,tot:0});
+  DATA.forEach(t=>t.exercises.forEach(e=>{const s=st(e.id);const g=agg[e.type];g.tot++;
+    if(s.done){if(s.diff==='b')g.b++;else if(s.diff==='m')g.m++;else if(s.diff==='a')g.a++;else g.nr++;}}));
+  const list=types.filter(t=>agg[t].tot>0)
+    .sort((p,q)=>{const A=agg[p],B=agg[q];return (B.a-A.a)||(B.m-A.m)||((B.a+B.m+B.b+B.nr)-(A.a+A.m+A.b+A.nr));});
+  document.getElementById("topics").innerHTML=list.map(t=>{
+    const g=agg[t],done=g.b+g.m+g.a+g.nr,pc=g.tot?Math.round(done/g.tot*100):0,col=TYPE_COLORS[t];
+    const mix=[];if(g.b)mix.push(`<span style="color:var(--d-low)"><b>${g.b}</b> bassa</span>`);
+    if(g.m)mix.push(`<span style="color:var(--d-mid)"><b>${g.m}</b> media</span>`);
+    if(g.a)mix.push(`<span style="color:var(--d-high)"><b>${g.a}</b> alta</span>`);
+    return `<div class="card topic ${g.a>0?'hot':''}">
+      ${donut([{v:g.b,color:'var(--d-low)'},{v:g.m,color:'var(--d-mid)'},{v:g.a,color:'var(--d-high)'},{v:g.nr,color:'var(--d-none)'}],62,11,pc+"","",col)}
+      <div class="meta">
+        <div class="name"><i class="dot" style="background:${col}"></i>${t}</div>
+        <div class="frac">${done}/${g.tot} svolti</div>
+        <div class="mix">${mix.length?mix.join(""):'<span style="color:var(--ink-soft)">—</span>'}</div>
+      </div></div>`;
+  }).join("");
+}
+
+function renderReview(){
+  const items=[];
+  DATA.forEach(t=>t.exercises.forEach(e=>{const s=st(e.id);
+    if(s.done&&(s.diff==='a'||s.diff==='m'))items.push({when:t.short,type:e.type,letter:e.letter,diff:s.diff});}));
+  items.sort((p,q)=>(p.diff==='a'?0:1)-(q.diff==='a'?0:1));
+  const el=document.getElementById("review");
+  if(!items.length){el.innerHTML=`<div class="empty">Nessun esercizio segnato come difficile finora. Man mano che svolgi i TDE, quelli a difficoltà media o alta compaiono qui come lista di ripasso.</div>`;return;}
+  el.innerHTML=items.map(i=>`<div class="row">
+    <span class="badge" style="background:${DIFF_COLORS[i.diff]}">${DIFF_LABEL[i.diff]}</span>
+    <span class="when">${i.when}</span>
+    <span class="what"><i class="dot" style="background:${TYPE_COLORS[i.type]}"></i>${i.letter}. ${i.type}</span>
+  </div>`).join("");
+}
+
+function renderList(){
+  document.getElementById("tdelist").innerHTML=DATA.map((t,ti)=>{
+    const s=tdeStatus(t),pc=Math.round(s.done/s.tot*100);
+    const rows=t.exercises.map(e=>{
+      const x=st(e.id),col=TYPE_COLORS[e.type];
+      const cls=x.done&&x.diff?x.diff:'';
+      const dp=lv=>`<span class="dpill ${lv} ${x.diff===lv?'on':''}" onclick="setDiff('${e.id}','${lv}')">${DIFF_LABEL[lv]}</span>`;
+      return `<div class="ex ${cls}">
+        <span class="lt">${e.letter}.</span>
+        <span class="ty"><i class="dot" style="background:${col}"></i><b>${e.type}</b></span>
+        <span class="ctrls">
+          <button class="toggle ${x.done?'on-done':''}" onclick="setDone('${e.id}')">${x.done?'✓ Fatto':'Fatto'}</button>
+          <span class="diffset ${x.done?'':'dis'}">${dp('b')}${dp('m')}${dp('a')}</span>
+        </span>
+      </div>`;
+    }).join("");
+    return `<div class="card tde ${s.started?'open':''}" id="tde${ti}">
+      <div class="tde-head" onclick="document.getElementById('tde${ti}').classList.toggle('open')">
+        <span class="date">${t.label}</span>
+        <span class="pill">${s.done}/${s.tot}</span>
+        <span class="spacer"></span>
+        <span class="bar"><i style="width:${pc}%;background:${s.full?'var(--conc)':'var(--d-low)'}"></i></span>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="ex-list">${rows}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderAll(){renderStats();renderTopics();renderReview();renderList();
+  const x=tallyAll();
+  document.getElementById("fnote").textContent=`${x.done}/${x.tot} esercizi svolti · ${x.a} ad alta difficoltà · ${DATA.length} appelli`;
+}
+renderAll();
+</script>
+</body>
+</html>
