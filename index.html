@@ -17,18 +17,23 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
-  body{
-    font-family:'Spline Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);
+  body{font-family:'Spline Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);
     line-height:1.5;padding:clamp(16px,4vw,48px);
     background-image:radial-gradient(circle at 12% 18%,rgba(194,65,12,.04),transparent 38%),radial-gradient(circle at 88% 8%,rgba(34,87,196,.045),transparent 42%);
-    min-height:100vh;
-  }
+    min-height:100vh;}
   .wrap{max-width:1080px;margin:0 auto}
   header{margin-bottom:clamp(22px,4vw,40px)}
   .kicker{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
   h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(34px,8vw,62px);line-height:.96;letter-spacing:-.02em}
   h1 em{font-style:italic;font-weight:400;color:var(--rank)}
   .sub{color:var(--ink-soft);margin-top:12px;max-width:48ch;font-size:15px}
+  .hbtns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .hbtn{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+    padding:7px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--card);
+    color:var(--ink-soft);text-decoration:none;transition:border-color .15s,color .15s}
+  .hbtn:hover{border-color:var(--conc);color:var(--conc)}
+  .hbtn.primary{background:var(--conc);border-color:var(--conc);color:#fff}
+  .hbtn.primary:hover{opacity:.88;color:#fff}
 
   .grid-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:28px 0}
   @media(max-width:720px){.grid-stats{grid-template-columns:1fr;gap:12px}}
@@ -45,16 +50,80 @@
   .section-h .n{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);letter-spacing:.1em}
   .section-h .hint{font-family:'Spline Sans';font-size:12.5px;font-weight:400;color:var(--ink-soft);margin-left:auto}
 
+  /* TOPIC CARDS */
   .grid-topics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
   @media(max-width:720px){.grid-topics{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:420px){.grid-topics{grid-template-columns:1fr}}
-  .topic{padding:16px;display:flex;gap:14px;align-items:center;position:relative;overflow:hidden}
+  .topic{padding:16px;display:flex;gap:14px;align-items:center;position:relative;overflow:hidden;
+    cursor:pointer;transition:transform .12s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+  .topic:hover{transform:translateY(-2px);box-shadow:var(--shadow),0 4px 16px -8px rgba(0,0,0,.15)}
   .topic.hot{box-shadow:var(--shadow),inset 4px 0 0 var(--d-high)}
+  .topic.active{box-shadow:var(--shadow),0 0 0 2px var(--tc,var(--conc))}
   .topic .meta{flex:1;min-width:0}
   .topic .name{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px}
   .topic .frac{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:3px}
   .topic .mix{font-size:11.5px;margin-top:6px;display:flex;gap:9px;flex-wrap:wrap}
   .topic .mix b{font-weight:600}
+  .topic .guide-hint{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-soft);margin-top:8px;display:flex;align-items:center;gap:5px}
+  .topic .guide-hint .arr{transition:transform .2s}
+  .topic.active .guide-hint .arr{transform:rotate(90deg)}
+
+  /* GUIDE PANEL */
+  .gpanel{display:none;margin:6px 0 0;border-radius:18px;overflow:hidden}
+  .gpanel.open{display:block;animation:gslide .22s ease}
+  @keyframes gslide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .gpanel-inner{padding:22px 24px;position:relative}
+  .gpanel-close{position:absolute;top:16px;right:18px;background:none;border:1px solid var(--line2);
+    color:var(--ink-soft);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:11.5px;
+    font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;transition:border-color .15s}
+  .gpanel-close:hover{border-color:var(--d-high);color:var(--d-high)}
+  .ghead{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-right:100px}
+  .ghead h2{font-family:'Fraunces',serif;font-weight:700;font-size:22px}
+  .ghead .gtopic-dot{width:12px;height:12px;border-radius:4px;flex:none}
+
+  /* TABS */
+  .gtabs{display:flex;gap:7px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:12px}
+  .gtab{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+    padding:5px 12px;border-radius:20px;border:1px solid var(--line2);background:var(--paper2);
+    color:var(--ink-soft);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+  .gtab:hover{border-color:var(--ink-soft)}
+  .gtab.active{color:#fff;border-color:transparent}
+  .gsection{display:none}.gsection.active{display:block}
+
+  /* GUIDE CONTENT */
+  .gsteps{counter-reset:gs;margin:12px 0}
+  .gstep{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start}
+  .gstep-n{counter-increment:gs;width:28px;height:28px;border-radius:9px;flex:none;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:900;font-size:14px;color:#fff}
+  .gstep-n::before{content:counter(gs)}
+  .gstep-b{flex:1}
+  .gstep-b strong{display:block;font-size:14.5px;font-weight:600;margin-bottom:4px}
+  .gstep-b p{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.6}
+  .gstep-b p b{color:var(--ink)}
+  .gbox{border-radius:10px;padding:13px 15px;margin:10px 0;font-size:13.5px;line-height:1.6}
+  .gbox.ex{background:rgba(47,158,99,.07);border:1px solid rgba(47,158,99,.22)}
+  .gbox.warn{background:rgba(224,153,42,.07);border:1px solid rgba(224,153,42,.22)}
+  .gbox.info{background:rgba(34,87,196,.06);border:1px solid rgba(34,87,196,.2)}
+  .gbox.danger{background:rgba(207,58,44,.06);border:1px solid rgba(207,58,44,.2)}
+  .gbox-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin-bottom:7px}
+  .gbox.ex .gbox-label{color:var(--d-low)}.gbox.warn .gbox-label{color:var(--d-mid)}
+  .gbox.info .gbox-label{color:var(--conc)}.gbox.danger .gbox-label{color:var(--d-high)}
+  .gbox p{margin:0;color:var(--ink-soft)}.gbox p b{color:var(--ink)}
+  .gbox ul{padding-left:18px;color:var(--ink-soft)}.gbox ul li{margin-bottom:4px}
+  .gtbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+  .gtbl th{background:var(--paper);padding:7px 11px;text-align:left;font-weight:600;color:var(--ink-soft);border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .gtbl td{padding:7px 11px;border:1px solid var(--line)}
+  .gtbl tr:nth-child(even) td{background:var(--paper2)}
+  .gtbl .ok{color:var(--d-low);font-weight:700}.gtbl .no{color:var(--d-high);font-weight:700}.gtbl .hl{color:var(--d-mid);font-weight:700}
+  .gcode{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--paper2);border:1px solid var(--line);
+    border-radius:9px;padding:13px 15px;margin:10px 0;line-height:1.75;white-space:pre-wrap;overflow-x:auto;color:var(--ink)}
+  .kw{color:var(--conc);font-weight:700}.gcm{color:var(--ink-soft)}.gstr{color:var(--d-low)}.ghl{color:var(--jpa)}
+  .gdivider{border:none;border-top:1px solid var(--line);margin:18px 0}
+  .gformula{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--paper2);border:1px solid var(--line);
+    border-radius:9px;padding:12px 14px;margin:10px 0;color:var(--d-high);line-height:1.7}
+  h3.gsub{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:18px 0 8px;color:var(--ink)}
 
   .review{padding:18px 20px}
   .review .row{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--line)}
@@ -112,17 +181,22 @@
   <header>
     <div class="kicker">Politecnico · Basi di Dati 2</div>
     <h1>TDE <em>Tracker</em></h1>
-    <p class="sub">Per ogni esercizio segna <b>Fatto</b> e la <b>difficoltà riscontrata</b>. I grafici evidenziano gli argomenti più ostici, e la lista "Da ripassare" raccoglie i punti deboli.</p>
-    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-      <a href="guide.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#2fd398,#4f8cff);color:#081a10;font-weight:700;font-size:14px;border-radius:12px;text-decoration:none;font-family:'Spline Sans',sans-serif">Guide agli Esercizi</a>
-      <a href="quiz.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#ff7a3d,#ff5c2e);color:#1a0800;font-weight:700;font-size:14px;border-radius:12px;text-decoration:none;font-family:'Spline Sans',sans-serif">Quiz Arcade</a>
+    <p class="sub">Segna <b>Fatto</b> e la <b>difficoltà</b> per ogni esercizio. Clicca su un argomento per aprire la guida passo-passo.</p>
+    <div class="hbtns">
+      <a href="quiz.html" class="hbtn primary">⚡ Quiz Arcade</a>
     </div>
   </header>
 
   <div class="grid-stats" id="stats"></div>
 
-  <div class="section-h"><span class="n">01</span> Difficoltà per argomento<span class="hint">ordinati dal più ostico ↓</span></div>
+  <div class="section-h"><span class="n">01</span> Difficoltà per argomento<span class="hint">clicca per la guida ↓</span></div>
   <div class="grid-topics" id="topics"></div>
+  <div class="card gpanel" id="gpanel">
+    <div class="gpanel-inner" id="gpanel-inner">
+      <button class="gpanel-close" onclick="closeGuide()">✕ chiudi</button>
+      <div id="gpanel-content"></div>
+    </div>
+  </div>
 
   <div class="section-h"><span class="n">02</span> Da ripassare<span class="hint">esercizi a difficoltà media / alta</span></div>
   <div class="card review" id="review"></div>
@@ -138,6 +212,7 @@
 
 <script>
 const TYPE_COLORS={"Ranking":"var(--rank)","Concurrency control":"var(--conc)","Triggers":"var(--trig)","Physical DB":"var(--phys)","JPA":"var(--jpa)","Theory":"var(--theo)"};
+const TYPE_COLORS_HEX={"Ranking":"#c2410c","Concurrency control":"#2257c4","Triggers":"#0d8a6a","Physical DB":"#7b4ad1","JPA":"#a8551b","Theory":"#5a6577"};
 const DIFF_COLORS={b:"var(--d-low)",m:"var(--d-mid)",a:"var(--d-high)"};
 const DIFF_LABEL={b:"Bassa",m:"Media",a:"Alta"};
 const RAW=[
@@ -176,19 +251,672 @@ let STATE={};
 try{const s=localStorage.getItem(KEY);if(s)STATE=JSON.parse(s);}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(STATE));}catch(e){}}
 function st(id){return STATE[id]||{done:false,diff:null};}
-
 function setDone(id){const s=st(id);const n=!s.done;STATE[id]={done:n,diff:n?s.diff:null};save();renderAll();}
 function setDiff(id,lv){const s=st(id);const nd=s.diff===lv?null:lv;STATE[id]={done:true,diff:nd};save();renderAll();}
 function resetAll(){if(confirm("Azzerare tutti i progressi su questo dispositivo?")){STATE={};save();renderAll();}}
 
-function donut(segs,size,thick,centerMain,centerSub,mainColor){
-  const r=(size-thick)/2, c=2*Math.PI*r, total=segs.reduce((a,s)=>a+s.v,0)||1;
-  let off=0,arcs="";
-  segs.forEach(s=>{
-    const len=s.v/total*c;
-    arcs+=`<circle class="donut-seg" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${thick}" stroke-dasharray="${len.toFixed(2)} ${(c-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${size/2} ${size/2})"/>`;
-    off+=len;
+// ─── GUIDE CONTENT ──────────────────────────────────────────────────────────
+const GUIDES = {
+
+"Concurrency control": {
+  tabs: ["Classificazione schedule","Deadlock Obermarck"],
+  sections: [`
+<h3 class="gsub">Cos'è uno schedule e perché classificarlo</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Quando più transazioni accedono al DB contemporaneamente, il loro interleaving (mescolanza) si chiama <b>schedule</b>. L'obiettivo è capire se quello schedule produce risultati corretti, cioè equivalenti a un'esecuzione seriale (una transazione alla volta).</p>
+
+<h3 class="gsub">Gerarchia delle classi</h3>
+<div class="gformula">Strict 2PL ⊆ 2PL ⊆ CSR ⊆ VSR
+(ogni classe è un sottoinsieme della successiva)</div>
+<p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px">Sfrutta questa gerarchia: se dimostri CSR → ottieni VSR gratis. Se dimostri NON-CSR → ottieni NON-2PL e NON-Strict 2PL gratis.</p>
+
+<h3 class="gsub">Passo 1 — Grafo dei conflitti (CSR)</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
+  <strong>Individua i conflitti</strong>
+  <p>Due operazioni di transazioni <b>diverse</b> sulla <b>stessa risorsa</b> sono in conflitto se almeno una è una <b>scrittura</b>. Tipi: r/w, w/r, w/w. Le letture pure (r/r) non conflittano mai.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
+  <strong>Costruisci il grafo</strong>
+  <p>Un nodo per ogni transazione. Per ogni coppia in conflitto, arco da <b>T_i → T_j</b> se l'operazione di T_i viene <b>prima</b> nello schedule. Archi duplicati tra stessa coppia → tienine solo uno.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
+  <strong>Controlla i cicli</strong>
+  <p>Grafo <b>aciclico</b> → schedule in <span style="color:var(--d-low);font-weight:600">CSR ✓</span> (e quindi anche VSR). Ciclo presente → <span style="color:var(--d-high);font-weight:600">NON CSR</span>.</p>
+</div></div>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Giugno 2024</div>
+<p><b>S =</b> r1(Z) r2(X) w2(Y) w3(Y) w4(Z) w2(Z) w5(X) r5(Y) w4(X) r6(Y) w6(X)</p>
+<p>Conflitti su X: r2(X)→w4(X), r2(X)→w5(X), w4(X)↔w5(X) → archi T2→T4, T2→T5, T5→T4 (o T4→T5).<br>
+Conflitti su Z: w4(Z)→w2(Z) → arco T4→T2. Ma anche r2(X)→w4(X) → T2→T4.<br>
+<b>Ciclo T2→T4→T2</b>: NON CSR, NON 2PL, NON Strict 2PL.</p>
+</div>
+
+<h3 class="gsub">Passo 2 — VSR (se NON CSR)</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
+  <strong>Individua le blind write</strong>
+  <p>Una <b>blind write</b> è una scrittura w_i(x) dove T_i non ha mai letto x prima. Spostare una blind write non cambia i reads-from (nessuno leggeva quel valore), quindi è una mossa "gratis" per trovare equivalenza seriale.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
+  <strong>Prova le serializzazioni</strong>
+  <p>Cerca uno schedule seriale (T_a, T_b, T_c…) con gli stessi <b>reads-from</b> e le stesse <b>final write</b>. Se esiste → VSR. Reads-from: chi ha scritto x subito prima di ogni lettura. Final write: chi scrive x per ultimo.</p>
+</div></div>
+</div>
+
+<h3 class="gsub">Passo 3 — 2PL e Strict 2PL</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
+  <strong>Costruisci la tabella lock/unlock</strong>
+  <p>Regola 2PL: ogni transazione ha una <b>fase di crescita</b> (acquisisce lock) e una <b>fase di shrinking</b> (rilascia lock). Non può acquisire nuovi lock dopo aver rilasciato il primo. Cerca violazioni: T_i rilascia il lock su A e poi deve acquisire quello su B → violazione.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
+  <strong>Strict 2PL: tutti i lock al commit</strong>
+  <p>In Strict 2PL i lock vengono rilasciati <b>solo al commit/abort</b>. Questo elimina le dirty read. Se 2PL fallisce → Strict 2PL fallisce automaticamente.</p>
+</div></div>
+</div>
+
+<h3 class="gsub">Passo 4 — TS Multi (Snapshot Isolation)</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
+  <strong>Compila la tabella RTM/WTM</strong>
+  <p>Inizia con RTM(x)=0 e WTM(x)=0 per tutte le risorse. Per <b>r_i(x)</b>: aggiorna RTM(x)=i(j) dove j è il WTM corrente. Per <b>w_i(x)</b>: controlla che i ≥ last WTM(x) e i ≥ RTM(x). Se no → T_i viene uccisa. Aggiorna WTM(x) aggiungendo i.</p>
+</div></div>
+</div>
+<div class="gbox warn"><div class="gbox-label">Regola pratica per TS Multi</div>
+<p><b>w_i(x) viene uccisa se:</b> i &lt; ultimo WTM(x) (qualcuno ha scritto x dopo di te) oppure i &lt; RTM(x) (qualcuno ha letto x con timestamp più recente del tuo).</p>
+</div>`,
+
+`<h3 class="gsub">Cos'è il deadlock distribuito</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:14px">In un sistema distribuito, il DB è su più nodi. Le transazioni su nodi diversi possono aspettarsi a vicenda formando un ciclo (deadlock) che nessun singolo nodo riesce a vedere per intero. L'algoritmo di Obermarck rileva questi cicli passando messaggi tra i nodi.</p>
+
+<h3 class="gsub">Il wait-for graph distribuito</h3>
+<p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:12px">Ogni nodo mantiene il proprio grafo di attesa locale. Gli archi <b>E_X → t_i</b> significano "T_i aspetta una transazione esterna dal nodo X". Gli archi <b>t_j → E_X</b> significano "una transazione esterna al nodo X aspetta T_j".</p>
+
+<h3 class="gsub">Algoritmo passo-passo</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
+  <strong>Ogni nodo cerca cammini E_X → … → E_Y nel proprio grafo locale</strong>
+  <p>Un cammino che inizia con un arco entrante da fuori (E_X→) e finisce con uno uscente verso fuori (→E_Y) può essere trasmesso al nodo Y.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
+  <strong>Applica la convenzione di trasmissione</strong>
+  <p><b>Convenzione i &gt; j:</b> trasmetti il cammino t_i → t_j solo se i &gt; j.<br>
+  <b>Convenzione i &lt; j:</b> trasmetti solo se i &lt; j.<br>
+  L'esame specifica sempre quale usare.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
+  <strong>Ogni nodo riceve, integra e propaga nuovamente</strong>
+  <p>Aggiungi il cammino ricevuto al grafo locale. Cerca nuovi cammini da trasmettere. Il <b>deadlock è rilevato</b> quando appare un ciclo del tipo E_X → … → E_X sullo stesso nodo X.</p>
+</div></div>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Febbraio 2024 (convenzione i&gt;j)</div>
+<p>Nodo B ha: E_A→t5→t6→t1→E_C. Poiché 5&gt;1, trasmette EA→t5→t1→EC a Nodo A.<br>
+Nodo A integra: ora ha E_A→t5→t4→E_A. <b>Ciclo rilevato → deadlock!</b></p>
+</div>
+<div class="gbox warn"><div class="gbox-label">Errore comune</div>
+<p>Non dimenticare di verificare i <b>nuovi cammini creabili</b> dopo ogni ricezione. Dopo che un nodo riceve un cammino e lo integra, potrebbe avere nuovi cammini da trasmettere che prima non esistevano.</p>
+</div>`]
+},
+
+"Ranking": {
+  tabs: ["Skyline & SFS","Fagin (FA)","Threshold (TA)","NRA"],
+  sections: [`
+<h3 class="gsub">Cos'è lo skyline</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Lo skyline è l'insieme degli elementi <b>potenzialmente ottimali</b>: un elemento è nello skyline se nessun altro lo domina su tutti gli attributi contemporaneamente. Utile quando non conosci la funzione di scoring esatta ma vuoi eliminare le opzioni chiaramente peggiori.</p>
+
+<h3 class="gsub">Dominanza</h3>
+<p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:10px"><b>a domina b</b> (scritto a ≺ b) se a è ≥ b su tutti gli attributi e > su almeno uno. Agli esami Poli: valori più alti = migliori (salvo indicazione contraria).</p>
+
+<h3 class="gsub">Algoritmo SFS (Sorted Filter Skyline)</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Ordina il dataset per il primo attributo (poi il secondo come tiebreak)</strong>
+  <p>Metti prima chi ha valore più alto sul primo attributo.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Il primo elemento entra sempre nello skyline</strong>
+  <p>Nessuno può dominarlo sul primo attributo.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Per ogni elemento successivo: controlla la dominanza rispetto a tutti i già-skyline</strong>
+  <p>Se anche <b>uno solo</b> dei già-skyline lo domina → fuori. Altrimenti → entra nello skyline.</p>
+</div></div>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Gennaio 2025 (hotel, distanze = lower-is-better)</div>
+<p>Ordinati per ts crescente: a(0.30,0.80), d(0.40,0.90), h(0.50,0.70)...<br>
+<b>a</b>: skyline. <b>d</b>: a ≺ d (0.30&lt;0.40 e 0.80&lt;0.90) → fuori. <b>h</b>: a non domina h (h migliore su ch) → skyline.<br>
+<b>Skyline finale = {a, h, b, e, i}</b></p>
+</div>
+
+<h3 class="gsub">k-Skyband</h3>
+<p style="font-size:13.5px;color:var(--ink-soft)">Il <b>k-skyband</b> include tutti gli elementi dominati da meno di k elementi. Lo skyline normale è il 1-skyband. Per calcolare il 2-skyband: conta quanti skyline-elements dominano ogni non-skyline; se meno di 2 → entra nel 2-skyband.</p>
+
+<div class="gbox info"><div class="gbox-label">Teorema chiave</div>
+<p>Skyline = insieme di tutti i potenziali top-1 per <b>qualsiasi funzione monotona</b>. Se usi solo combinazioni lineari (L1), i candidati top-1 sono solo quelli sul <b>guscio convesso</b> dello skyline.</p>
+</div>`,
+
+`<h3 class="gsub">Cos'è FA (Fagin's Algorithm)</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">I dati sono distribuiti su m server, ognuno ordinato per un attributo. FA trova i top-k in due fasi: prima legge in ordine finché k elementi sono comuni a tutte le liste, poi fa accessi casuali per completare i punteggi.</p>
+
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Fase 1 — Accessi ordinati (s.a.): leggi da tutte le liste in parallelo</strong>
+  <p>Ad ogni round leggi un elemento da ogni lista. Tieni traccia di tutti gli elementi visti finora. Fermati quando hai trovato <b>k elementi presenti in tutte le m liste</b>.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Fase 2 — Accessi casuali (r.a.): completa i punteggi degli elementi comuni</strong>
+  <p>Per ogni elemento comune, se manca il valore su qualche lista → accesso casuale. Ora conosci il punteggio completo di tutti gli elementi comuni.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Restituisci i k migliori tra gli elementi comuni</strong>
+</div></div>
+</div>
+<div class="gbox warn"><div class="gbox-label">FA richiede funzione monotona</div>
+<p>FA è corretto solo se la funzione di scoring è <b>monotona</b> (aumentare un attributo non diminuisce mai lo score). Con funzioni non monotone FA può dare risultati sbagliati.</p>
+</div>
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Febbraio 2025 (top-2, f=4A+2B+C)</div>
+<p>Round 1: vedo 1(A), 2(B), 2(C). Round 2: 7(A), 1(B), 7(C). Round 3: 2(A), 3(B), 3(C). Round 4: 3(A), 4(B), 1(C).<br>
+Elementi comuni in tutte e 3 le liste dopo round 4: {1,2,3} (≥ k=2). <b>STOP.</b><br>
+Accessi casuali: score di 4, 7. Top-2: {1(5.45), 2(5.00)}.</p>
+</div>`,
+
+`<h3 class="gsub">Cos'è TA (Threshold Algorithm)</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">TA usa una <b>soglia (threshold T)</b>: il punteggio massimo teorico di qualsiasi elemento non ancora completamente visto. Si ferma prima di FA perché non aspetta k elementi comuni.</p>
+
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Ad ogni round: leggi un elemento da ogni lista (accesso ordinato)</strong>
+  <p>Per ogni nuovo elemento, fai subito <b>accessi casuali</b> sulle altre liste per calcolarne lo score completo.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Calcola la soglia T = f(ultimo_L1, ultimo_L2, …, ultimo_Lm)</strong>
+  <p>T è il punteggio massimo possibile per qualsiasi elemento non ancora completamente visto (con funzione monotona).</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Fermati quando il k-esimo score nel buffer ≥ T</strong>
+  <p>Nessun elemento non visto può superare il k-esimo: output i k migliori nel buffer.</p>
+</div></div>
+</div>
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Gennaio 2024 (top-2, funzione MAX)</div>
+<p>Round 1: A(0.9), B(0.9), F(1.0). Score F=1.0, A=0.9, B=0.9. T=MAX(0.9,0.9,1.0)=1.0. Buffer: {F(1.0), A(0.9)}.<br>
+Round 2: B(0.8), D(0.8), D(0.9). T=MAX(0.8,0.8,0.9)=0.9. 2° nel buffer = A con 0.9 ≥ T=0.9. <b>STOP.</b><br>
+Top-2 = {F, A}. s.a.=6.</p>
+</div>
+<div class="gbox info"><div class="gbox-label">TA è instance-optimal</div>
+<p>Tra tutti gli algoritmi che usano sia s.a. che r.a., TA non fa mai più accessi del necessario (per istanza). In generale TA fa meno accessi di FA, ma non sempre.</p>
+</div>`,
+
+`<h3 class="gsub">Cos'è NRA (No Random Access)</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">NRA si usa quando gli accessi casuali non sono disponibili. Usa solo accessi ordinati, ma stima i punteggi con un intervallo [lb, ub] che si restringe man mano che si vedono più dati.</p>
+
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Ad ogni round leggi un elemento da ogni lista (solo s.a.)</strong>
+  <p>Per ogni elemento nel buffer, conosci solo i valori sulle liste in cui lo hai già visto.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Calcola lb e ub per ogni elemento nel buffer</strong>
+  <p><b>lb</b> = score usando valori noti e <b>0</b> per gli ignoti.<br>
+  <b>ub</b> = score usando valori noti e l'<b>ultimo valore visto</b> su quella lista per gli ignoti (il massimo ancora possibile).</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
+  <strong>Fermati quando i top-k sono certi: lb del k-esimo ≥ ub di tutti gli altri</strong>
+  <p>Quando nessun elemento fuori dal top-k potrà mai superare il k-esimo, si ferma.</p>
+</div></div>
+</div>
+<div class="gbox ex"><div class="gbox-label">Confronto FA / TA / NRA</div>
+<table class="gtbl">
+<tr><th>Algoritmo</th><th>Accessi casuali</th><th>Stopping criterion</th></tr>
+<tr><td>FA</td><td>Sì (fase 2)</td><td>k elementi comuni</td></tr>
+<tr><td>TA</td><td>Sì (ogni round)</td><td>k-esimo score ≥ soglia T</td></tr>
+<tr><td>NRA</td><td>No</td><td>lb k-esimo ≥ ub tutti gli altri</td></tr>
+</table>
+</div>`]
+},
+
+"Physical DB": {
+  tabs: ["B+ tree","Hash index","Query plan & costi","Esempi TDE"],
+  sections: [`
+<h3 class="gsub">Cos'è un B+ tree</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Un B+ tree è un indice strutturato su più livelli. I nodi interni guidano la ricerca, le foglie contengono le chiavi con puntatori ai dati (indice secondario) o i dati stessi (indice primario/clustered). Tutte le foglie sono collegate in lista.</p>
+
+<h3 class="gsub">Costi di accesso con B+ tree</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Ricerca per chiave primaria (1 tupla)</strong>
+  <p>Costo = numero di livelli del B+. Es: B+ con 3 livelli → <b>3 I/O</b> (2 nodi interni + 1 foglia).</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Range query su indice primario (dati ordinati fisicamente)</strong>
+  <p>Costo = (livelli − 1 nodi interni) + <b>foglie con i dati da leggere</b>. Le foglie sono contigue → efficiente.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Stima delle foglie da leggere</strong>
+  <p>foglie = leaf_nodes_totali × (tuple_sel / tuple_totali)<br>
+  Es: 1300 foglie, val(Country)=100 → 1300/100 = 13 foglie per un paese.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Indice secondario: aggiunge un accesso per ogni puntatore</strong>
+  <p>Foglie → puntatori → accesso al dato. Con tuple sparse: ogni puntatore = 1 I/O aggiuntivo. Con tuple clusterizzate: risparmio.</p>
+</div></div>
+</div>`,
+
+`<h3 class="gsub">Cos'è un Hash index</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Applica una funzione hash all'attributo per trovare direttamente il blocco. Velocissimo per uguaglianza, inutile per range query.</p>
+
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Costo ricerca esatta: 1 I/O (+ catena di overflow)</strong>
+  <p>Se l'esame dice "no overflow" → 1 I/O. Se dice "costo di overflow 1.3" → 1.3 I/O in media.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Non supporta range query</strong>
+  <p>Per WHERE A &gt; 10 o BETWEEN → devi usare B+ o scansione sequenziale.</p>
+</div></div>
+</div>
+<div class="gbox info"><div class="gbox-label">Notazione</div>
+<p><b>t(R)</b> = tuple di R · <b>b(R)</b> = blocchi di R · <b>val(A)</b> = valori distinti di A<br>
+Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
+</div>`,
+
+`<h3 class="gsub">Nested Loop Join (NLJ)</h3>
+<div class="gformula">Costo NLJ = b(R) + t(R) × b(S)
+(R = tabella esterna, S = tabella interna)</div>
+<p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:14px">È quasi sempre il piano peggiore. Usalo come baseline. Metti come esterna la tabella più piccola (o quella con cui filtri di più).</p>
+
+<h3 class="gsub">Come scegliere il piano ottimale</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Calcola quante tuple sopravvivono a ogni filtro WHERE</strong>
+  <p>Usa t(R)/val(A) per uguaglianza. Moltiplica per percentuali se indicato.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Parti dalla tabella con il filtro più selettivo</strong>
+  <p>Se c'è un indice su quella condizione → usalo. Ottieni poche tuple → poi fai lookup sull'altra tabella.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Per il join: usa l'indice sulla tabella interna</strong>
+  <p>Costo = n_tuple_filtrate × costo_lookup_indice(tabella_interna)</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
+  <strong>Scrivi la formula completa e confronta i piani</strong>
+</div></div>
+</div>`,
+
+`<div class="gbox ex"><div class="gbox-label">TDE Gennaio 2025 — Ticket JOIN Passenger</div>
+<p>Ticket: 300K tuple, 45K blocchi. val(RouteTo)=250.<br>
+Passenger: B+ primario su PassengerId, 3 livelli, 2500 foglie.</p>
+<p><b>Piano 1 — scan Ticket + lookup Passenger:</b><br>
+45K + (300K/250) × 3 = 45K + 1200×3 = <b>48.6K I/O</b></p>
+<p><b>Piano 2 — scan Passenger + scan Ticket:</b><br>
+2500 + (40K/500) × 45K = 2500 + 80×45K = <b>~3.6M I/O</b> ← molto peggio</p>
+</div>
+<div class="gbox ex"><div class="gbox-label">TDE Settembre 2025 — City JOIN Event con B+ su Date</div>
+<p>Event: 1M tuple, 5K blocchi. B+ su Date: 3 livelli, 1200 foglie. 1% eventi nel range = 10K.<br>
+val(Category)=25, val(CountryName)=100.</p>
+<p><b>Piano con B+ su Date:</b><br>
+2 nodi interni + 12 foglie + 10K accessi ai dati + 4×4 lookup City = <b>~10.030 I/O</b></p>
+<p><b>Piano scan Event (senza indice su Date):</b><br>
+5K + 4×4 = <b>5.016 I/O</b> ← più efficiente in questo caso!</p>
+<p style="color:var(--d-high);font-weight:600">Conclusione: l'indice non aiuta sempre. Confronta sempre i piani numericamente.</p>
+</div>`]
+},
+
+"Triggers": {
+  tabs: ["Sintassi & concetti","Come progettare","Terminazione","Esempi completi"],
+  sections: [`
+<h3 class="gsub">Struttura di un trigger</h3>
+<div class="gcode"><span class="kw">CREATE TRIGGER</span> nome
+<span class="ghl">AFTER</span> | BEFORE
+<span class="kw">INSERT</span> | <span class="kw">UPDATE</span> [<span class="kw">OF</span> colonna] | <span class="kw">DELETE</span>
+<span class="kw">ON</span> tabella
+[<span class="kw">FOR EACH ROW</span> | <span class="kw">FOR EACH STATEMENT</span>]
+[<span class="kw">WHEN</span> (condizione)]
+<span class="kw">BEGIN</span>
+  <span class="gcm">-- corpo</span>
+<span class="kw">END</span>;</div>
+
+<h3 class="gsub">BEFORE vs AFTER</h3>
+<table class="gtbl">
+<tr><th>Timing</th><th>Quando si attiva</th><th>Uso tipico</th></tr>
+<tr><td>BEFORE</td><td>Prima della modifica al DB</td><td>Validazione, blocco operazione (RAISE EXCEPTION), correzione valori</td></tr>
+<tr><td>AFTER</td><td>Dopo la modifica al DB</td><td>Propagazione effetti su altre tabelle (quasi sempre agli esami)</td></tr>
+</table>
+
+<h3 class="gsub">FOR EACH ROW vs FOR EACH STATEMENT</h3>
+<table class="gtbl">
+<tr><th>Granularità</th><th>Si esegue</th><th>OLD/NEW disponibili</th></tr>
+<tr><td>FOR EACH ROW</td><td>Una volta per ogni tupla modificata</td><td class="ok">Sì (quasi sempre usato)</td></tr>
+<tr><td>FOR EACH STATEMENT</td><td>Una volta per tutta l'istruzione</td><td class="no">No</td></tr>
+</table>
+
+<h3 class="gsub">OLD e NEW</h3>
+<table class="gtbl">
+<tr><th>Variabile</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr>
+<tr><td>NEW.col</td><td class="ok">Nuova riga</td><td class="ok">Valori nuovi</td><td class="no">Non disponibile</td></tr>
+<tr><td>OLD.col</td><td class="no">Non disponibile</td><td class="ok">Valori vecchi</td><td class="ok">Riga eliminata</td></tr>
+</table>`,
+
+`<h3 class="gsub">Matrice degli eventi: quando serve un trigger?</h3>
+<p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:12px">Per ogni tabella e ogni evento (INSERT/UPDATE/DELETE) chiediti: <b>"Questa modifica può cambiare il contenuto della tabella target da mantenere?"</b></p>
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Febbraio 2024 (vista BUDGET)</div>
+<table class="gtbl">
+<tr><th>Tabella</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr>
+<tr><td>PROJECT</td><td>Sì: crea riga BUDGET</td><td>No (PK non cambia)</td><td>Sì: rimuovi da BUDGET</td></tr>
+<tr><td>EMP</td><td>No</td><td>Sì: cambia salary → aggiorna costo</td><td>No</td></tr>
+<tr><td>ASSIGNMENT</td><td>Sì: aggiunge salary al progetto</td><td>No (PK non cambia)</td><td>Sì: sottrae salary</td></tr>
+</table>
+</div>
+
+<h3 class="gsub">Metodo passo-passo</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
+  <strong>Scegli evento e tabella sorgente</strong>
+  <p>AFTER INSERT ON tabella_che_cambia_i_dati</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
+  <strong>Scegli FOR EACH ROW (quasi sempre)</strong>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
+  <strong>Scrivi il corpo: usa NEW.col e OLD.col</strong>
+  <p>Fai SELECT/INSERT/UPDATE/DELETE sulla tabella target. Se devi bloccare → RAISE EXCEPTION (con BEFORE).</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
+  <strong>Verifica la terminazione</strong>
+</div></div>
+</div>`,
+
+`<h3 class="gsub">Grafo di attivazione</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Ogni nodo = un trigger. C'è un arco da T1 a T2 se l'azione di T1 può attivare T2. Se il grafo è <b>aciclico</b> → terminazione garantita. Se ci sono cicli → analizza se le condizioni WHEN li bloccano.</p>
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE 2023</div>
+<p>T_total_salary (AFTER INSERT ON PERFORMANCE) → fa UPDATE su PERSON<br>
+T_richest (AFTER UPDATE OF total_salary ON PERSON) → fa UPDATE su RICHEST<br>
+<b>Grafo: T_total_salary → T_richest → (fine).</b> Aciclico → terminazione garantita.</p>
+</div>
+<div class="gbox warn"><div class="gbox-label">Cicli pericolosi</div>
+<p>Se T1 aggiorna tabella A che attiva T2 che aggiorna tabella A che attiva T1 → ciclo infinito. Serve una condizione WHEN che lo interrompa (es. IF NEW.val &lt;&gt; OLD.val).</p>
+</div>`,
+
+`<div class="gbox ex"><div class="gbox-label">Trigger classico — Aggiornare un totale (TDE Feb 2024)</div>
+<div class="gcode"><span class="gcm">-- assignment inserito → aggiungi salary al BUDGET del progetto</span>
+<span class="kw">CREATE TRIGGER</span> T4
+<span class="kw">AFTER INSERT ON</span> ASSIGNMENT <span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">UPDATE</span> BUDGET
+  <span class="kw">SET</span> COST = COST + (<span class="kw">SELECT</span> SALARY <span class="kw">FROM</span> EMP <span class="kw">WHERE</span> EID = NEW.EID)
+  <span class="kw">WHERE</span> PID = NEW.PID;
+<span class="kw">END</span>;
+
+<span class="gcm">-- salary cambia → aggiorna BUDGET</span>
+<span class="kw">CREATE TRIGGER</span> T3
+<span class="kw">AFTER UPDATE OF</span> SALARY <span class="kw">ON</span> EMP <span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">UPDATE</span> BUDGET
+  <span class="kw">SET</span> COST = COST + NEW.SALARY - OLD.SALARY
+  <span class="kw">WHERE</span> PID = (<span class="kw">SELECT</span> PID <span class="kw">FROM</span> ASSIGNMENT <span class="kw">WHERE</span> EID = NEW.EID);
+<span class="kw">END</span>;</div>
+</div>
+<div class="gbox ex"><div class="gbox-label">Trigger con blocco inserimento (TDE 2023)</div>
+<div class="gcode"><span class="gcm">-- rifiuta inserimento se supera il budget del film</span>
+<span class="kw">CREATE TRIGGER</span> limited_budget
+<span class="kw">AFTER INSERT ON</span> PERFORMANCE <span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">IF</span> (<span class="kw">SELECT SUM</span>(salary) <span class="kw">FROM</span> PERFORMANCE <span class="kw">WHERE</span> MOVIEID = NEW.MOVIEID) &gt;
+     (<span class="kw">SELECT</span> budget <span class="kw">FROM</span> MOVIE <span class="kw">WHERE</span> MOVIEID = NEW.MOVIEID)
+  <span class="kw">THEN RAISE EXCEPTION</span> <span class="gstr">'Budget superato'</span>;
+  <span class="kw">END IF</span>;
+<span class="kw">END</span>;</div>
+</div>`]
+},
+
+"JPA": {
+  tabs: ["Annotazioni base","Relazioni & owner","Fetch & cascade","Esempio completo"],
+  sections: [`
+<h3 class="gsub">Struttura minima di un'entità JPA</h3>
+<div class="gcode"><span class="kw">@Entity</span>  <span class="gcm">// questa classe è una tabella nel DB</span>
+<span class="kw">public class</span> Author <span class="kw">implements</span> Serializable {
+  <span class="kw">@Id</span>
+  <span class="kw">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+  <span class="kw">private int</span> id;           <span class="gcm">// chiave primaria, autoincrement</span>
+  <span class="kw">private</span> String name;      <span class="gcm">// colonna normale</span>
+  <span class="kw">@Temporal</span>(TemporalType.DATE)
+  <span class="kw">private</span> Date birthDate;   <span class="gcm">// campo data</span>
+  <span class="kw">@Basic</span>(fetch = FetchType.LAZY)
+  <span class="kw">@Lob</span>
+  <span class="kw">private byte</span>[] photo;     <span class="gcm">// Large Object: caricato solo su richiesta</span>
+}</div>
+<div class="gbox info"><div class="gbox-label">Regole obbligatorie</div>
+<ul><li>@Entity sulla classe</li><li>@Id su un campo (la chiave primaria)</li><li>implements Serializable</li><li>Costruttore senza argomenti (anche implicito va bene)</li></ul>
+</div>`,
+
+`<h3 class="gsub">Tipi di relazione</h3>
+<table class="gtbl">
+<tr><th>Annotazione</th><th>Cardinalità</th><th>Esempio</th></tr>
+<tr><td>@ManyToOne</td><td>N:1</td><td>Book → Author (molti libri per un autore)</td></tr>
+<tr><td>@OneToMany</td><td>1:N</td><td>Author → List&lt;Book&gt;</td></tr>
+<tr><td>@OneToOne</td><td>1:1</td><td>Person ↔ Passport</td></tr>
+<tr><td>@ManyToMany</td><td>N:M</td><td>Student ↔ Course</td></tr>
+</table>
+
+<h3 class="gsub">Owner side e mappedBy</h3>
+<p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:10px">L'<b>owner</b> è il lato che controlla la foreign key nel DB. Il lato non-owner usa <b>mappedBy = "nomeAttributo"</b> dove nomeAttributo è il campo nell'entità owner che punta a questa relazione.</p>
+<div class="gcode"><span class="gcm">// Book è OWNER: ha la FK author_id nel DB</span>
+<span class="kw">@ManyToOne</span>
+<span class="kw">@JoinColumn</span>(name = <span class="gstr">"author_id"</span>)
+<span class="kw">private</span> Author author;  <span class="gcm">// owner</span>
+
+<span class="gcm">// Author è NON-owner: usa mappedBy</span>
+<span class="kw">@OneToMany</span>(mappedBy = <span class="gstr">"author"</span>)
+<span class="kw">private</span> List&lt;Book&gt; books;</div>
+<div class="gbox warn"><div class="gbox-label">Regola per scegliere l'owner</div>
+<ul><li><b>@ManyToOne:</b> sempre il lato "Many" è owner (ha la FK)</li><li><b>@ManyToMany:</b> scegli liberamente; usa @JoinTable sull'owner</li><li><b>@OneToOne:</b> owner = il lato con la FK</li></ul>
+</div>
+<div class="gcode"><span class="gcm">// ManyToMany: owner usa @JoinTable</span>
+<span class="kw">@ManyToMany</span>
+<span class="kw">@JoinTable</span>(name = <span class="gstr">"actor_movie"</span>,
+  joinColumns = {<span class="kw">@JoinColumn</span>(name = <span class="gstr">"movie_id"</span>)},
+  inverseJoinColumns = {<span class="kw">@JoinColumn</span>(name = <span class="gstr">"actor_id"</span>)})
+<span class="kw">private</span> List&lt;Artist&gt; actors;  <span class="gcm">// owner</span>
+
+<span class="gcm">// lato non-owner</span>
+<span class="kw">@ManyToMany</span>(mappedBy = <span class="gstr">"actors"</span>)
+<span class="kw">private</span> List&lt;Movie&gt; movies;</div>`,
+
+`<h3 class="gsub">Fetch type: LAZY vs EAGER</h3>
+<table class="gtbl">
+<tr><th>Tipo</th><th>Carica i dati</th><th>Default per</th></tr>
+<tr><td>EAGER</td><td>Subito, con l'entità principale</td><td>@ManyToOne, @OneToOne</td></tr>
+<tr><td>LAZY</td><td>Solo al primo accesso</td><td>@OneToMany, @ManyToMany</td></tr>
+</table>
+<div class="gbox warn"><div class="gbox-label">Come scegliere agli esami</div>
+<ul>
+<li>Collezione con <b>pochi elementi</b> (decine/centinaia) sempre mostrati → <b>EAGER</b></li>
+<li>Collezione con <b>molti elementi</b> (migliaia/milioni) → <b>LAZY</b> obbligatorio</li>
+<li>Campo grande (foto, file binari) → <b>@Lob + LAZY</b></li>
+</ul>
+</div>
+
+<h3 class="gsub">Cascade</h3>
+<table class="gtbl">
+<tr><th>CascadeType</th><th>Cosa propaga</th></tr>
+<tr><td>PERSIST</td><td>Salva automaticamente i figli quando salvi il padre</td></tr>
+<tr><td>REMOVE</td><td>Cancella i figli quando cancelli il padre (usa con cautela!)</td></tr>
+<tr><td>MERGE</td><td>Aggiorna i figli quando aggiorni il padre</td></tr>
+<tr><td>ALL</td><td>Tutte le operazioni</td></tr>
+</table>
+<div class="gbox danger"><div class="gbox-label">Quando NON usare CASCADE.REMOVE</div>
+<p>Se il figlio può esistere senza il padre (es. Libro senza Autore) → non usare REMOVE. Usalo solo per entità dipendenti (es. righe di un ordine).</p>
+</div>`,
+
+`<div class="gbox ex"><div class="gbox-label">Esempio completo — Movie & Artist (TDE 2023)</div>
+<div class="gcode"><span class="kw">@Entity</span>
+<span class="kw">public class</span> Artist <span class="kw">implements</span> Serializable {
+  <span class="kw">@Id @GeneratedValue</span>(strategy=GenerationType.IDENTITY)
+  <span class="kw">private int</span> id;
+  <span class="kw">private</span> String firstname, lastname, role;
+  <span class="kw">@Basic</span>(fetch=FetchType.LAZY) <span class="kw">@Lob</span>
+  <span class="kw">private byte</span>[] photo; <span class="gcm">// LAZY: foto grandi, solo se serve</span>
+
+  <span class="kw">@OneToMany</span>(mappedBy=<span class="gstr">"director"</span>, fetch=FetchType.EAGER)
+  <span class="kw">@OrderBy</span>(<span class="gstr">"issuedate DESC"</span>)
+  <span class="kw">private</span> List&lt;Movie&gt; directedMovies; <span class="gcm">// EAGER: pochi film per regista</span>
+
+  <span class="kw">@ManyToMany</span>(mappedBy=<span class="gstr">"actors"</span>, fetch=FetchType.EAGER)
+  <span class="kw">@OrderBy</span>(<span class="gstr">"issuedate DESC"</span>)
+  <span class="kw">private</span> List&lt;Movie&gt; actedMovies; <span class="gcm">// EAGER: curriculum breve</span>
+}
+
+<span class="kw">@Entity</span>
+<span class="kw">public class</span> Movie <span class="kw">implements</span> Serializable {
+  <span class="kw">@Id @GeneratedValue</span>(strategy=GenerationType.IDENTITY)
+  <span class="kw">private int</span> id;
+  <span class="kw">private</span> String title, genre; <span class="kw">private int</span> revenues;
+  <span class="kw">@Temporal</span>(TemporalType.DATE) <span class="kw">private</span> Date issuedate;
+
+  <span class="kw">@ManyToOne @JoinColumn</span>(name=<span class="gstr">"director_id"</span>)
+  <span class="kw">private</span> Artist director; <span class="gcm">// owner: Movie ha la FK</span>
+
+  <span class="kw">@ManyToMany</span>
+  <span class="kw">@JoinTable</span>(name=<span class="gstr">"actor_movie"</span>,
+    joinColumns={<span class="kw">@JoinColumn</span>(name=<span class="gstr">"movie_id"</span>)},
+    inverseJoinColumns={<span class="kw">@JoinColumn</span>(name=<span class="gstr">"actor_id"</span>)})
+  <span class="kw">private</span> List&lt;Artist&gt; actors; <span class="gcm">// owner</span>
+}</div>
+</div>`]
+},
+
+"Theory": {
+  tabs: ["ACID & Isolamento","R-tree","Recovery & WAL"],
+  sections: [`
+<h3 class="gsub">Proprietà ACID</h3>
+<table class="gtbl">
+<tr><th>Proprietà</th><th>Significato</th></tr>
+<tr><td><b>A</b>tomicity</td><td>Una transazione va tutta o non va: o tutto commit o tutto abort</td></tr>
+<tr><td><b>C</b>onsistency</td><td>Il DB deve restare in uno stato consistente prima e dopo ogni transazione</td></tr>
+<tr><td><b>I</b>solation</td><td>Le transazioni concorrenti non devono interferire tra loro</td></tr>
+<tr><td><b>D</b>urability</td><td>Dopo un commit, i dati sopravvivono anche ai guasti di sistema</td></tr>
+</table>
+
+<h3 class="gsub">Livelli di isolamento SQL</h3>
+<table class="gtbl">
+<tr><th>Livello</th><th>Dirty read</th><th>Non-repeatable read</th><th>Phantom read</th></tr>
+<tr><td>Read Uncommitted</td><td class="no">Possibile</td><td class="no">Possibile</td><td class="no">Possibile</td></tr>
+<tr><td>Read Committed</td><td class="ok">No</td><td class="no">Possibile</td><td class="no">Possibile</td></tr>
+<tr><td>Repeatable Read</td><td class="ok">No</td><td class="ok">No</td><td class="no">Possibile</td></tr>
+<tr><td>Serializable</td><td class="ok">No</td><td class="ok">No</td><td class="ok">No</td></tr>
+</table>
+<div class="gbox info"><div class="gbox-label">Definizioni delle anomalie</div>
+<ul>
+<li><b>Dirty read:</b> leggo dati scritti da una transazione non ancora committata</li>
+<li><b>Non-repeatable read:</b> rileggo la stessa riga e ottengo un valore diverso</li>
+<li><b>Phantom read:</b> rileggo con una WHERE e ottengo righe diverse (aggiunte/rimosse)</li>
+</ul>
+</div>`,
+
+`<h3 class="gsub">Cos'è un R-tree</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Un R-tree è una struttura dati spaziale per indicizzare oggetti multi-dimensionali (punti, rettangoli, poligoni). È analogo al B+ tree ma per dati spaziali.</p>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--theo)"></div><div class="gstep-b">
+  <strong>MBB (Minimum Bounding Box/Rectangle)</strong>
+  <p>Ogni nodo interno del R-tree raggruppa i figli in un <b>rettangolo minimo che li contiene tutti</b> (MBB). La ricerca scende nell'albero solo nei sotto-alberi i cui MBB si sovrappongono alla query.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--theo)"></div><div class="gstep-b">
+  <strong>Differenze principali dal B+ tree</strong>
+  <p>1) Gli MBB dei fratelli possono <b>sovrapporsi</b> (in B+ le chiavi non si sovrappongono).<br>
+  2) I dati sono multi-dimensionali, non lineari.<br>
+  3) Una ricerca può richiedere di esplorare più sotto-alberi (path multipli).</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--theo)"></div><div class="gstep-b">
+  <strong>Inserimento</strong>
+  <p>Scegli il nodo foglia che necessita della minima espansione del MBB per contenere il nuovo oggetto. Se il nodo è pieno → split del nodo, aggiornamento dei MBB verso l'alto.</p>
+</div></div>
+</div>`,
+
+`<h3 class="gsub">WAL — Write-Ahead Logging</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">WAL è la regola fondamentale del logging per il recovery: <b>scrivi il record di log su disco PRIMA di scrivere il dato modificato su disco</b>. Questo garantisce che il recovery possa sempre disfare (UNDO) o rifare (REDO) ogni operazione.</p>
+<div class="gbox info"><div class="gbox-label">Perché WAL</div>
+<p>Se il sistema crasha dopo aver scritto il dato ma prima del log, non sapremmo come fare UNDO. WAL garantisce che il log sia sempre "davanti" ai dati.</p>
+</div>
+
+<h3 class="gsub">2PC — Two Phase Commit (distributed)</h3>
+<div class="gsteps">
+<div class="gstep"><div class="gstep-n" style="background:var(--theo)"></div><div class="gstep-b">
+  <strong>Fase 1 — Prepare: il coordinatore chiede a tutti i nodi "Puoi committare?"</strong>
+  <p>Ogni nodo risponde YES o NO. Se qualcuno dice NO → abort su tutti.</p>
+</div></div>
+<div class="gstep"><div class="gstep-n" style="background:var(--theo)"></div><div class="gstep-b">
+  <strong>Fase 2 — Commit/Abort: il coordinatore decide e notifica tutti</strong>
+  <p>Se tutti YES → commit globale. Altrimenti → abort globale. Garantisce atomicità distribuita.</p>
+</div></div>
+</div>`]
+}
+
+}; // fine GUIDES
+
+// ─── GUIDE PANEL LOGIC ──────────────────────────────────────────────────────
+let activeGuide=null;
+
+function openGuide(type,el){
+  const panel=document.getElementById("gpanel");
+  // toggle off
+  if(activeGuide===type){
+    panel.classList.remove("open");
+    activeGuide=null;
+    document.querySelectorAll(".topic").forEach(t=>t.classList.remove("active"));
+    return;
+  }
+  activeGuide=type;
+  document.querySelectorAll(".topic").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  panel.style.setProperty("--tc",TYPE_COLORS_HEX[type]);
+
+  const g=GUIDES[type];
+  if(!g){panel.classList.remove("open");return;}
+  panel.classList.add("open");
+  renderGuidePanel(type,g);
+  setTimeout(()=>panel.scrollIntoView({behavior:"smooth",block:"nearest"}),50);
+}
+
+function closeGuide(){
+  document.getElementById("gpanel").classList.remove("open");
+  document.querySelectorAll(".topic").forEach(t=>t.classList.remove("active"));
+  activeGuide=null;
+}
+
+function renderGuidePanel(type,g){
+  const col=TYPE_COLORS_HEX[type];
+  const tabs=g.tabs.map((t,i)=>`<button class="gtab ${i===0?'active':''}" onclick="switchTab(${i})" id="gtab${i}" style="${i===0?'background:'+col+';border-color:'+col:''}">${t}</button>`).join("");
+  const secs=g.sections.map((s,i)=>`<div class="gsection ${i===0?'active':''}" id="gsec${i}">${s}</div>`).join("");
+  document.getElementById("gpanel-content").innerHTML=`
+    <div class="ghead">
+      <div class="gtopic-dot" style="background:${col}"></div>
+      <h2>${type}</h2>
+    </div>
+    <div class="gtabs">${tabs}</div>
+    ${secs}`;
+  // store col for tab switching
+  document.getElementById("gpanel-content").dataset.col=col;
+}
+
+function switchTab(i){
+  const col=document.getElementById("gpanel-content").dataset.col;
+  document.querySelectorAll(".gtab").forEach((t,j)=>{
+    t.classList.toggle("active",j===i);
+    t.style.background=j===i?col:"";t.style.borderColor=j===i?col:"";
   });
+  document.querySelectorAll(".gsection").forEach((s,j)=>s.classList.toggle("active",j===i));
+}
+
+// ─── DONUT & RENDER ─────────────────────────────────────────────────────────
+function donut(segs,size,thick,centerMain,centerSub,mainColor){
+  const r=(size-thick)/2,c=2*Math.PI*r,total=segs.reduce((a,s)=>a+s.v,0)||1;
+  let off=0,arcs="";
+  segs.forEach(s=>{const len=s.v/total*c;
+    arcs+=`<circle class="donut-seg" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${thick}" stroke-dasharray="${len.toFixed(2)} ${(c-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${size/2} ${size/2})"/>`;
+    off+=len;});
   return `<div class="donut-wrap" style="width:${size}px;height:${size}px">
     <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
       <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--todo)" stroke-width="${thick}"/>${arcs}
@@ -211,7 +939,7 @@ function tdeStatus(t){let d=0;t.exercises.forEach(e=>{if(st(e.id).done)d++;});
 function renderStats(){
   const x=tallyAll();
   let tdeFull=0,tdePart=0;DATA.forEach(t=>{const s=tdeStatus(t);if(s.full)tdeFull++;else if(s.started)tdePart++;});
-  const tot=DATA.length, pcDone=Math.round(x.done/x.tot*100);
+  const tot=DATA.length,pcDone=Math.round(x.done/x.tot*100);
   const diffSegs=[{v:x.b,color:'var(--d-low)'},{v:x.m,color:'var(--d-mid)'},{v:x.a,color:'var(--d-high)'},{v:x.nr,color:'var(--d-none)'}];
   document.getElementById("stats").innerHTML=`
   <div class="card stat">
@@ -248,16 +976,17 @@ function renderTopics(){
   const list=types.filter(t=>agg[t].tot>0)
     .sort((p,q)=>{const A=agg[p],B=agg[q];return (B.a-A.a)||(B.m-A.m)||((B.a+B.m+B.b+B.nr)-(A.a+A.m+A.b+A.nr));});
   document.getElementById("topics").innerHTML=list.map(t=>{
-    const g=agg[t],done=g.b+g.m+g.a+g.nr,pc=g.tot?Math.round(done/g.tot*100):0,col=TYPE_COLORS[t];
+    const g=agg[t],done=g.b+g.m+g.a+g.nr,pc=g.tot?Math.round(done/g.tot*100):0,col=TYPE_COLORS[t],isActive=activeGuide===t;
     const mix=[];if(g.b)mix.push(`<span style="color:var(--d-low)"><b>${g.b}</b> bassa</span>`);
     if(g.m)mix.push(`<span style="color:var(--d-mid)"><b>${g.m}</b> media</span>`);
     if(g.a)mix.push(`<span style="color:var(--d-high)"><b>${g.a}</b> alta</span>`);
-    return `<div class="card topic ${g.a>0?'hot':''}">
+    return `<div class="card topic ${g.a>0?'hot':''} ${isActive?'active':''}" style="--tc:${TYPE_COLORS_HEX[t]}" onclick="openGuide('${t}',this)">
       ${donut([{v:g.b,color:'var(--d-low)'},{v:g.m,color:'var(--d-mid)'},{v:g.a,color:'var(--d-high)'},{v:g.nr,color:'var(--d-none)'}],62,11,pc+"","",col)}
       <div class="meta">
         <div class="name"><i class="dot" style="background:${col}"></i>${t}</div>
         <div class="frac">${done}/${g.tot} svolti</div>
         <div class="mix">${mix.length?mix.join(""):'<span style="color:var(--ink-soft)">—</span>'}</div>
+        <div class="guide-hint">Guida <span class="arr">▶</span></div>
       </div></div>`;
   }).join("");
 }
@@ -268,7 +997,7 @@ function renderReview(){
     if(s.done&&(s.diff==='a'||s.diff==='m'))items.push({when:t.short,type:e.type,letter:e.letter,diff:s.diff});}));
   items.sort((p,q)=>(p.diff==='a'?0:1)-(q.diff==='a'?0:1));
   const el=document.getElementById("review");
-  if(!items.length){el.innerHTML=`<div class="empty">Nessun esercizio segnato come difficile finora. Man mano che svolgi i TDE, quelli a difficoltà media o alta compaiono qui come lista di ripasso.</div>`;return;}
+  if(!items.length){el.innerHTML=`<div class="empty">Nessun esercizio segnato come difficile finora.</div>`;return;}
   el.innerHTML=items.map(i=>`<div class="row">
     <span class="badge" style="background:${DIFF_COLORS[i.diff]}">${DIFF_LABEL[i.diff]}</span>
     <span class="when">${i.when}</span>
