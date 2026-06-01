@@ -1069,7 +1069,82 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <tr><th>Variabile</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr>
 <tr><td>NEW.col</td><td class="ok">Nuova riga</td><td class="ok">Valori nuovi</td><td class="no">Non disponibile</td></tr>
 <tr><td>OLD.col</td><td class="no">Non disponibile</td><td class="ok">Valori vecchi</td><td class="ok">Riga eliminata</td></tr>
-</table>`,
+</table>
+
+<h3 class="gsub">Bloccare un'operazione — SIGNAL vs RAISE EXCEPTION</h3>
+<p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px">Nei trigger BEFORE puoi bloccare l'operazione segnalando un errore. I due esami usano sintassi diverse a seconda del DBMS:</p>
+<table class="gtbl">
+<tr><th>Sintassi</th><th>DBMS</th><th>Quando la trovi</th></tr>
+<tr><td><div class="gcode" style="margin:0;padding:4px 8px;font-size:12px"><span class="kw">SIGNAL SQLSTATE</span> <span class="gstr">'45000'</span><br><span class="kw">SET MESSAGE_TEXT</span> = <span class="gstr">'Errore!'</span>;</div></td><td>DB2 / MySQL</td><td>TDE sett 2023, lug 2025, giu 2025</td></tr>
+<tr><td><div class="gcode" style="margin:0;padding:4px 8px;font-size:12px"><span class="kw">RAISE EXCEPTION</span> <span class="gstr">'Errore!'</span>;</div></td><td>PostgreSQL</td><td>TDE 2022, 2023, 2024</td></tr>
+</table>
+<div class="gbox info"><div class="gbox-label">Codice SQLSTATE</div>
+<p>Il codice nella stringa (es. <b>'45000'</b>, <b>'70001'</b>) è arbitrario — serve solo a identificare il tipo di errore. Il valore esatto non conta per l'esame; l'importante è usare la sintassi corretta. Tipicamente si usano codici che iniziano con '45' o '70' per errori user-defined.</p>
+</div>
+
+<h3 class="gsub">DECLARE e SELECT INTO</h3>
+<p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px">Dentro il corpo di un trigger puoi dichiarare variabili locali e popolarle con una query:</p>
+<div class="gcode"><span class="kw">BEGIN</span>
+  <span class="kw">DECLARE</span> emp_count <span class="kw">INT</span>;          <span class="gcm">-- dichiara variabile</span>
+  <span class="kw">SELECT</span> <span class="kw">COUNT</span>(*) <span class="kw">INTO</span> emp_count  <span class="gcm">-- popola da query</span>
+  <span class="kw">FROM</span> EMP <span class="kw">WHERE</span> deptID = OLD.deptID;
+
+  <span class="kw">IF</span> emp_count = 0 <span class="kw">THEN</span>
+    <span class="kw">SIGNAL SQLSTATE</span> <span class="gstr">'45000'</span>
+    <span class="kw">SET MESSAGE_TEXT</span> = <span class="gstr">'Ultimo dipendente: impossibile eliminare'</span>;
+  <span class="kw">END IF</span>;
+
+  <span class="kw">UPDATE</span> ... <span class="kw">SET</span> ratio = totAmt / emp_count ...;
+<span class="kw">END</span>;</div>
+<div class="gbox warn"><div class="gbox-label">SELECT INTO vs SELECT normale</div>
+<p><b>SELECT INTO var</b> assegna il risultato a una variabile locale — funziona solo se la query ritorna esattamente una riga. Se ritorna zero righe la variabile rimane NULL; se ritorna più righe va in errore. Usa sempre una query con WHERE sulla PK o con COUNT()/SUM() per essere sicuro.</p>
+</div>
+
+<h3 class="gsub">IF / THEN / ELSEIF / ELSE</h3>
+<div class="gcode"><span class="kw">IF</span> condizione1 <span class="kw">THEN</span>
+  <span class="gcm">-- azione 1</span>
+<span class="kw">ELSEIF</span> condizione2 <span class="kw">THEN</span>
+  <span class="gcm">-- azione 2</span>
+<span class="kw">ELSE</span>
+  <span class="gcm">-- azione default</span>
+<span class="kw">END IF</span>;</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-top:6px">Uso tipico: confrontare OLD e NEW per evitare aggiornamenti inutili (es. <code style="font-size:11.5px">IF OLD.deptID != NEW.deptID THEN</code>), o controllare una condizione prima di agire.</p>
+
+<h3 class="gsub">REFERENCING — alias per NEW e OLD</h3>
+<p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px">In DB2 puoi dare un alias esplicito a NEW e OLD con <b>REFERENCING</b>:</p>
+<div class="gcode"><span class="kw">CREATE OR REPLACE TRIGGER</span> supervisorFK
+<span class="kw">BEFORE INSERT ON</span> EMP
+<span class="kw">REFERENCING NEW AS</span> N          <span class="gcm">-- N.col invece di NEW.col</span>
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">WHEN</span> ( <span class="kw">EXISTS</span> (
+  <span class="kw">SELECT</span> * <span class="kw">FROM</span> EMP
+  <span class="kw">WHERE</span> N.supervisor = EMP.ID
+  <span class="kw">AND</span> EMP.isProf <span class="kw">IS FALSE</span> ) )
+<span class="kw">SIGNAL SQLSTATE</span> <span class="gstr">'70001'</span>
+<span class="kw">SET MESSAGE_TEXT</span> = <span class="gstr">'The supervisor is not a Prof!'</span>;</div>
+<table class="gtbl" style="margin-top:10px">
+<tr><th>Clausola</th><th>Significato</th></tr>
+<tr><td><code>REFERENCING NEW AS N</code></td><td>Puoi scrivere N.col invece di NEW.col nel resto del trigger</td></tr>
+<tr><td><code>REFERENCING OLD AS O</code></td><td>Puoi scrivere O.col invece di OLD.col</td></tr>
+<tr><td><code>CREATE OR REPLACE TRIGGER</code></td><td>Crea il trigger, o lo sovrascrive se esiste già (equivale a DROP + CREATE)</td></tr>
+</table>
+
+<h3 class="gsub">WHEN con subquery EXISTS / NOT EXISTS</h3>
+<p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px">La clausola WHEN può contenere subquery complesse. Il trigger si esegue <b>solo se la condizione è vera</b> — non serve un IF nel corpo:</p>
+<div class="gcode"><span class="gcm">-- Blocca se il supervisor non esiste o non ha supervisor</span>
+<span class="kw">CREATE OR REPLACE TRIGGER</span> validReports
+<span class="kw">BEFORE INSERT ON</span> ReportsTo
+<span class="kw">REFERENCING NEW AS</span> N
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">WHEN</span> ( <span class="kw">NOT EXISTS</span> (
+  <span class="kw">SELECT</span> * <span class="kw">FROM</span> EMP
+  <span class="kw">WHERE</span> N.EmpID = EMP.ID
+  <span class="kw">AND</span> EMP.supervisor <span class="kw">IS NOT NULL</span> ) )
+<span class="kw">SIGNAL SQLSTATE</span> <span class="gstr">'70002'</span>
+<span class="kw">SET MESSAGE_TEXT</span> = <span class="gstr">'The employee has no supervisor!'</span>;</div>
+<div class="gbox info"><div class="gbox-label">WHEN vs IF nel corpo</div>
+<p>Con WHEN la condizione viene controllata <b>prima</b> di entrare nel corpo: se è falsa il trigger non viene nemmeno eseguito (più efficiente). Con IF nel corpo entri sempre, poi decidi cosa fare. Se il trigger deve solo segnalare un errore su una condizione, WHEN è più pulito. Se devi fare logica complessa con DECLARE/SELECT INTO, usa IF nel corpo.</p>
+</div>`,
 
 `<h3 class="gsub">Matrice degli eventi: quando serve un trigger?</h3>
 <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:12px">Per ogni tabella e ogni evento (INSERT/UPDATE/DELETE) chiediti: <b>"Questa modifica può cambiare il contenuto della tabella target da mantenere?"</b></p>
@@ -1166,6 +1241,85 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
   <span class="kw">THEN RAISE EXCEPTION</span> <span class="gstr">'Budget superato'</span>;
   <span class="kw">END IF</span>;
 <span class="kw">END</span>;</div>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">SIGNAL SQLSTATE + DECLARE + SELECT INTO (TDE sett 2023)</div>
+<div class="gcode"><span class="gcm">-- blocca UPDATE se il camion è in manutenzione</span>
+<span class="kw">CREATE TRIGGER</span> CheckMaintenance
+<span class="kw">BEFORE UPDATE OF</span> truckPlate <span class="kw">ON</span> TRIP <span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">DECLARE</span> truck_status <span class="kw">VARCHAR</span>(20);
+  <span class="kw">SELECT</span> status <span class="kw">INTO</span> truck_status
+  <span class="kw">FROM</span> TRUCK <span class="kw">WHERE</span> PLATE = NEW.truckPlate;
+
+  <span class="kw">IF</span> truck_status = <span class="gstr">'maintenance'</span> <span class="kw">THEN</span>
+    <span class="kw">SIGNAL SQLSTATE</span> <span class="gstr">'45000'</span>
+    <span class="kw">SET MESSAGE_TEXT</span> = <span class="gstr">'Truck under maintenance'</span>;
+  <span class="kw">END IF</span>;
+<span class="kw">END</span>;</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-top:8px">Pattern: DECLARE la variabile → SELECT INTO per leggerla → IF per decidere se segnalare l'errore.</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">REFERENCING + WHEN + SIGNAL (TDE lug 2025)</div>
+<div class="gcode"><span class="gcm">-- blocca INSERT su EMP se il supervisor indicato non è un prof</span>
+<span class="kw">CREATE OR REPLACE TRIGGER</span> supervisorFK
+<span class="kw">BEFORE INSERT ON</span> EMP
+<span class="kw">REFERENCING NEW AS</span> N
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">WHEN</span> ( <span class="kw">EXISTS</span> (
+  <span class="kw">SELECT</span> * <span class="kw">FROM</span> EMP
+  <span class="kw">WHERE</span> N.supervisor = EMP.ID
+  <span class="kw">AND</span> EMP.isProf <span class="kw">IS FALSE</span> ) )
+<span class="kw">SIGNAL SQLSTATE</span> <span class="gstr">'70001'</span>
+<span class="kw">SET MESSAGE_TEXT</span> = <span class="gstr">'The supervisor is not a Prof!'</span>;
+
+<span class="gcm">-- blocca INSERT su ReportsTo se l'impiegato non ha supervisor</span>
+<span class="kw">CREATE OR REPLACE TRIGGER</span> validReports
+<span class="kw">BEFORE INSERT ON</span> ReportsTo
+<span class="kw">REFERENCING NEW AS</span> N
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">WHEN</span> ( <span class="kw">NOT EXISTS</span> (
+  <span class="kw">SELECT</span> * <span class="kw">FROM</span> EMP
+  <span class="kw">WHERE</span> N.EmpID = EMP.ID
+  <span class="kw">AND</span> EMP.supervisor <span class="kw">IS NOT NULL</span> ) )
+<span class="kw">SIGNAL SQLSTATE</span> <span class="gstr">'70002'</span>
+<span class="kw">SET MESSAGE_TEXT</span> = <span class="gstr">'The employee has no supervisor!'</span>;</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-top:8px">Nota: quando il trigger ha solo SIGNAL e nessuna logica complessa, non serve <span style="font-family:monospace">BEGIN...END</span> — la singola istruzione SIGNAL è il corpo.</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">DECLARE + IF OLD != NEW + SIGNAL (TDE giu 2025)</div>
+<div class="gcode"><span class="gcm">-- impedisce di eliminare l'ultimo dipendente di un dipartimento</span>
+<span class="kw">CREATE TRIGGER</span> EmpDelete
+<span class="kw">AFTER DELETE ON</span> EMP <span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">DECLARE</span> emp_count <span class="kw">INT</span>;
+  <span class="kw">SELECT</span> <span class="kw">COUNT</span>(*) <span class="kw">INTO</span> emp_count
+  <span class="kw">FROM</span> EMP <span class="kw">WHERE</span> deptID = OLD.deptID;
+
+  <span class="kw">IF</span> emp_count = 0 <span class="kw">THEN</span>
+    <span class="kw">SIGNAL SQLSTATE</span> <span class="gstr">'45000'</span>
+    <span class="kw">SET MESSAGE_TEXT</span> = <span class="gstr">'Cannot delete the last employee in the department'</span>;
+  <span class="kw">END IF</span>;
+
+  <span class="kw">UPDATE</span> PROJECTS_INCOME
+  <span class="kw">SET</span> perCapitaAmt = totAmt / emp_count
+  <span class="kw">WHERE</span> deptID = OLD.deptID;
+<span class="kw">END</span>;
+
+<span class="gcm">-- aggiorna entrambi i dipartimenti quando cambia deptID</span>
+<span class="kw">CREATE TRIGGER</span> DeptUpdateForEmp
+<span class="kw">AFTER UPDATE ON</span> EMP <span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">IF</span> OLD.deptID != NEW.deptID <span class="kw">THEN</span>
+    <span class="kw">UPDATE</span> PROJECTS_INCOME
+    <span class="kw">SET</span> perCapitaAmt = totAmt / (<span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> EMP <span class="kw">WHERE</span> deptID = OLD.deptID)
+    <span class="kw">WHERE</span> deptID = OLD.deptID;
+    <span class="kw">UPDATE</span> PROJECTS_INCOME
+    <span class="kw">SET</span> perCapitaAmt = totAmt / (<span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> EMP <span class="kw">WHERE</span> deptID = NEW.deptID)
+    <span class="kw">WHERE</span> deptID = NEW.deptID;
+  <span class="kw">END IF</span>;
+<span class="kw">END</span>;</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-top:8px">Pattern classico su UPDATE: usa <b>IF OLD.col != NEW.col</b> per agire solo quando il valore è effettivamente cambiato, e aggiorna <b>entrambi</b> i "lati" (vecchio dipartimento e nuovo).</p>
 </div>`]
 },
 
