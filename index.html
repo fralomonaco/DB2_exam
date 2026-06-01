@@ -333,22 +333,53 @@ Conflitti su Z: w4(Z)→w2(Z) → arco T4→T2. Ma anche r2(X)→w4(X) → T2→
 <h3 class="gsub">Il wait-for graph distribuito</h3>
 <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:12px">Ogni nodo mantiene il proprio grafo di attesa locale. Gli archi <b>E_X → t_i</b> significano "T_i aspetta una transazione esterna dal nodo X". Gli archi <b>t_j → E_X</b> significano "una transazione esterna al nodo X aspetta T_j".</p>
 
+<div class="gbox info"><div class="gbox-label">Formato dei messaggi</div>
+<p>Un messaggio ha la forma <b>E_X → T_i → … → T_j → E_Y</b> e viene inviato al nodo Y.<br>
+Significa: "esiste un cammino di attesa che entra al nodo corrente da X, passa per T_i…T_j, ed esce verso Y".<br>
+La <b>convenzione</b> (i &lt; j oppure i &gt; j) dice <em>quali</em> cammini trasmettere tra quelli trovati.</p>
+</div>
+
 <h3 class="gsub">Algoritmo passo-passo</h3>
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
   <strong>Ogni nodo cerca cammini E_X → … → E_Y nel proprio grafo locale</strong>
-  <p>Un cammino che inizia con un arco entrante da fuori (E_X→) e finisce con uno uscente verso fuori (→E_Y) può essere trasmesso al nodo Y.</p>
+  <p>Un cammino che inizia con un arco entrante da fuori (E_X→) e finisce con uno uscente verso fuori (→E_Y) può essere trasmesso al nodo Y. Il nodo che segue è sempre determinato dall'<b>ultimo E_Y nel cammino</b>: se il cammino termina con →E_B, il messaggio va a B, e sarà B il prossimo ad agire.</p>
 </div></div>
 <div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
   <strong>Applica la convenzione di trasmissione</strong>
-  <p><b>Convenzione i &gt; j:</b> trasmetti il cammino t_i → t_j solo se i &gt; j.<br>
-  <b>Convenzione i &lt; j:</b> trasmetti solo se i &lt; j.<br>
-  L'esame specifica sempre quale usare.</p>
+  <p><b>Convenzione i &lt; j:</b> trasmetti il cammino E_X → T_i → … → T_j → E_Y solo se i &lt; j.<br>
+  <b>Convenzione i &gt; j:</b> trasmetti solo se i &gt; j.<br>
+  L'esame specifica sempre quale usare. Convenzioni diverse cambiano il numero di iterazioni, ma entrambe rilevano il deadlock.</p>
 </div></div>
 <div class="gstep"><div class="gstep-n" style="background:var(--trig)"></div><div class="gstep-b">
   <strong>Ogni nodo riceve, integra e propaga nuovamente</strong>
-  <p>Aggiungi il cammino ricevuto al grafo locale. Cerca nuovi cammini da trasmettere. Il <b>deadlock è rilevato</b> quando appare un ciclo del tipo E_X → … → E_X sullo stesso nodo X.</p>
+  <p>Aggiungi il cammino ricevuto al grafo locale. Cerca nuovi cammini da trasmettere (combinando il cammino ricevuto con quelli già presenti localmente). Il <b>deadlock è rilevato</b> quando appare un cammino E_X → … → E_X con lo stesso nodo X a entrambi gli estremi.</p>
 </div></div>
+</div>
+
+<div class="gbox warn"><div class="gbox-label">Dubbio frequente — "At node A" ma nel diagramma vedo T8 che sta in D</div>
+<p>Nelle soluzioni dei TDE, <b>"At node A"</b> significa che <b>A è il nodo che INVIA</b> il messaggio.<br>
+Il diagramma mostrato subito dopo è lo stato aggiornato del <b>nodo DESTINATARIO</b> (es. D), <em>non di A</em>.<br>
+Quindi se il testo dice "At A: messaggio … inviato a D" e vedi T8 nel diagramma — T8 appartiene a D (lo aveva già nel suo WFG originale), non ad A. Stai guardando il grafo di D aggiornato dopo aver ricevuto il messaggio da A.</p>
+</div>
+
+<div class="gbox warn"><div class="gbox-label">Dubbio frequente — come mai il WFG di un nodo contiene transazioni di altri nodi?</div>
+<p>Quando un nodo <b>riceve un messaggio</b>, aggiunge l'intero cammino al suo grafo locale.<br>
+Esempio: A riceve <code>E_A → T2 → T5 → E_A</code> da B. Ora il WFG di A contiene T2 e T5, anche se queste transazioni sono fisicamente su altri nodi.<br>
+Questo è voluto: Obermarck accumula <b>conoscenza distribuita</b> tramite i messaggi. Un nodo non vede solo le proprie transazioni, ma anche quelle arrivate via messaggi, per poter rilevare cicli globali.</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio TDE Feb 2026 (convenzione i &lt; j) — traccia delle iterazioni</div>
+<p><b>Stato iniziale:</b><br>
+A: E_D→T4→T3→E_D<br>
+B: E_C→T5→E_A · E_B→T5→E_D · E_D→T2→E_C · E_C→T8<br>
+C: E_D→T8→T5→E_B · E_A→T2→T3→T8→E_B<br>
+D: E_A→T5→T4→E_A · E_A→T3→T2→E_A · T8→E_C</p>
+<p><b>Iter 1 — At C:</b> C ha E_A→T2→T3→T8→E_B (T2&lt;T8 ✓) e E_A→T2→T5→E_B (T2&lt;T5 ✓) → invia entrambi a B.</p>
+<p><b>Iter 2 — At B:</b> B ha ricevuto E_A→T2→T5→E_B. Localmente B ha E_C→T5→E_A (T5 esce verso A). Concatenando: E_A→T2→T5→E_A (T2&lt;T5 ✓) → invia a A.</p>
+<p><b>Iter 3 — At A:</b> A ha ricevuto E_A→T2→T5→E_A. A ha localmente E_D→T4→T3→E_D. Concatenando con la parte T2→T5→E_D? No: A cerca nuovi cammini E_X→…→E_Y. Trova E_D→T2→T5→E_D (combinando il ricevuto con la conoscenza su T2) → invia a D.</p>
+<p><b>Iter 4 — At D:</b> D ha ricevuto E_D→T2→T5→E_D e localmente ha E_A→T3→T2→E_A e E_A→T5→T4→E_A. Concatenando E_A→T3→T4→E_A (T3&lt;T4 ✓) → invia a A.<br>
+<b>At A:</b> A riceve E_A→T3→T4→E_A. A ha localmente T4→T3 (da E_D→T4→T3→E_D). Ciclo: T3→T4→T3. <b>DEADLOCK rilevato!</b></p>
 </div>
 
 <div class="gbox ex"><div class="gbox-label">Esempio — TDE Febbraio 2024 (convenzione i&gt;j)</div>
