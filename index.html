@@ -392,6 +392,46 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 </div></div>
 </div>
 
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em">ESEMPIO GUIDATO — ANALISI VSR</div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 12px;margin-bottom:12px;overflow-x:auto;white-space:nowrap">
+  S = <span style="color:var(--conc)">w3(x)</span> <span style="color:var(--rank)">r2(y)</span> <span style="color:var(--phys)">r1(x)</span> <span style="color:var(--conc)">w3(z)</span> <span style="color:var(--rank)">w2(x)</span> <span style="color:var(--conc)">r3(y)</span> <span style="color:var(--phys)">w1(x)</span> <span style="color:var(--phys)">w1(z)</span>
+</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px"><b>Passo:</b> per ogni lettura, chi ha scritto quella risorsa subito prima nello schedule?</p>
+<table class="gtbl" style="white-space:nowrap">
+<thead><tr><th>#</th><th>Op</th><th>Ultima write su questa risorsa prima della lettura</th><th>Reads-from</th></tr></thead>
+<tbody>
+<tr><td>1</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--conc)">w3(x)</td><td style="color:var(--ink-soft);font-size:12px">— (scrittura, non legge)</td><td>—</td></tr>
+<tr><td>2</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--rank)">r2(y)</td><td style="font-size:12px">nessuna write su <b>y</b> prima → legge valore iniziale</td><td><span style="color:var(--ink-soft)">T&#x2080; (initial)</span></td></tr>
+<tr><td>3</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--phys)">r1(x)</td><td style="font-size:12px">w3(x) al passo 1 → T3 è l'ultima scrittrice di x</td><td><span class="hl">T3</span></td></tr>
+<tr><td>4</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--conc)">w3(z)</td><td style="color:var(--ink-soft);font-size:12px">— (scrittura, non legge)</td><td>—</td></tr>
+<tr><td>5</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--rank)">w2(x)</td><td style="color:var(--ink-soft);font-size:12px">— (scrittura, non legge)</td><td>—</td></tr>
+<tr><td>6</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--conc)">r3(y)</td><td style="font-size:12px">ancora nessuna write su <b>y</b> → legge valore iniziale</td><td><span style="color:var(--ink-soft)">T&#x2080; (initial)</span></td></tr>
+<tr><td>7</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--phys)">w1(x)</td><td style="color:var(--ink-soft);font-size:12px">— (scrittura, non legge)</td><td>—</td></tr>
+<tr><td>8</td><td style="font-family:'IBM Plex Mono',monospace;color:var(--phys)">w1(z)</td><td style="color:var(--ink-soft);font-size:12px">— (scrittura, non legge)</td><td>—</td></tr>
+</tbody>
+</table>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0">
+<div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:12.5px;flex:1;min-width:140px">
+  <div style="color:var(--ink-soft);font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;margin-bottom:5px">READS-FROM</div>
+  <div>r1(x) &#8592; <b style="color:var(--conc)">T3</b></div>
+  <div>r2(y) &#8592; T&#x2080;</div>
+  <div>r3(y) &#8592; T&#x2080;</div>
+</div>
+<div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:12.5px;flex:1;min-width:140px">
+  <div style="color:var(--ink-soft);font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;margin-bottom:5px">FINAL WRITES</div>
+  <div>x &#8594; <b>T1</b> <span style="color:var(--ink-soft);font-size:11.5px">(ultima: w1(x))</span></div>
+  <div>z &#8594; <b>T1</b> <span style="color:var(--ink-soft);font-size:11.5px">(ultima: w1(z))</span></div>
+  <div>y &#8594; T&#x2080; <span style="color:var(--ink-soft);font-size:11.5px">(nessuna write su y)</span></div>
+</div>
+<div style="background:rgba(60,180,100,.08);border:1px solid var(--d-low);border-radius:8px;padding:8px 12px;font-size:12.5px;flex:1;min-width:140px">
+  <div style="color:var(--d-low);font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;margin-bottom:5px">SCHEDULE SERIALE EQUIV.</div>
+  <div style="font-weight:600;font-size:13px">T2 &#8594; T3 &#8594; T1</div>
+  <div style="color:var(--ink-soft);font-size:12px;margin-top:4px">Stessi reads-from e final writes <span class="ok">&#10140; VSR &#10003;</span></div>
+</div>
+</div>
+</div>
+
 <h3 class="gsub">Passo 3 — 2PL e Strict 2PL</h3>
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
@@ -404,6 +444,25 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 </div></div>
 </div>
 
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em">ESEMPIO GUIDATO — VIOLAZIONE 2PL</div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 12px;margin-bottom:12px;overflow-x:auto;white-space:nowrap">
+  S = <span style="color:var(--phys)">r1(a)</span> <span style="color:var(--phys)">w1(b)</span> <span style="color:var(--ink-soft)">ul1(a)</span> <span style="color:var(--phys)">w1(c)</span>
+</div>
+<table class="gtbl" style="white-space:nowrap">
+<thead><tr><th>#</th><th>Op</th><th>Azione lock</th><th>Lock attivi T1</th><th>Fase T1</th><th>Valido?</th></tr></thead>
+<tbody>
+<tr><td>1</td><td style="font-family:'IBM Plex Mono',monospace">r1(a)</td><td>Acquisisce RL(a)</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px">{RL(a)}</td><td><span style="color:var(--d-low);font-weight:600">Growing</span></td><td class="ok">&#10003;</td></tr>
+<tr><td>2</td><td style="font-family:'IBM Plex Mono',monospace">w1(b)</td><td>Acquisisce WL(b)</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px">{RL(a), WL(b)}</td><td><span style="color:var(--d-low);font-weight:600">Growing</span></td><td class="ok">&#10003;</td></tr>
+<tr><td>3</td><td style="font-family:'IBM Plex Mono',monospace">ul1(a)</td><td>Rilascia RL(a)</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px">{WL(b)}</td><td><span style="color:var(--d-mid);font-weight:600">Shrinking &#8592;</span></td><td class="ok">&#10003;</td></tr>
+<tr style="background:rgba(220,60,60,.07)"><td>4</td><td style="font-family:'IBM Plex Mono',monospace">w1(c)</td><td>Tenta WL(c) — dopo un release!</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#e05555">{WL(b), WL(c)?}</td><td><span style="color:var(--d-high);font-weight:600">Shrinking</span></td><td class="no">&#10007; VIOLA</td></tr>
+</tbody>
+</table>
+<div class="gbox warn" style="margin-top:10px"><div class="gbox-label">Perché viola 2PL?</div>
+<p>T1 ha <b>rilasciato RL(a)</b> al passo 3, segnando l'inizio della fase di shrinking. Al passo 4 tenta di acquisire un nuovo lock WL(c) &#8594; <b>impossibile</b>: una volta iniziata la shrinking non si possono più acquisire lock.</p>
+</div>
+</div>
+
 <h3 class="gsub">Passo 4 — TS Multi (Snapshot Isolation)</h3>
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
@@ -413,6 +472,50 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 </div>
 <div class="gbox warn"><div class="gbox-label">Regola pratica per TS Multi</div>
 <p><b>w_i(x) viene uccisa se:</b> i &lt; ultimo WTM(x) (qualcuno ha scritto x dopo di te) oppure i &lt; RTM(x) (qualcuno ha letto x con timestamp più recente del tuo).</p>
+</div>
+
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em">ESEMPIO GUIDATO — TS MONO (RTM/WTM con kill)</div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 12px;margin-bottom:6px;overflow-x:auto;white-space:nowrap">
+  S = <span style="color:var(--phys)">r1(x)</span> <span style="color:var(--rank)">r2(y)</span> <span style="color:var(--phys)">w1(y)</span> <span style="color:var(--rank)">w2(x)</span> &nbsp;&#183;&nbsp; ts(T1)=1, ts(T2)=2
+</div>
+<p style="font-size:12px;color:var(--ink-soft);margin-bottom:8px">Stato iniziale: RTM(x)=0, WTM(x)=0, RTM(y)=0, WTM(y)=0</p>
+<table class="gtbl" style="white-space:nowrap;font-size:12.5px">
+<thead><tr><th>#</th><th>Op</th><th>Controllo / Aggiornamento</th><th>RTM(x)</th><th>WTM(x)</th><th>RTM(y)</th><th>WTM(y)</th><th>Esito</th></tr></thead>
+<tbody>
+<tr><td>1</td><td style="font-family:'IBM Plex Mono',monospace">r1(x)</td><td style="font-size:12px">RTM(x) = max(0, ts(T1)) = <b>1</b></td><td><b>1</b></td><td>0</td><td>0</td><td>0</td><td class="ok">OK</td></tr>
+<tr><td>2</td><td style="font-family:'IBM Plex Mono',monospace">r2(y)</td><td style="font-size:12px">RTM(y) = max(0, ts(T2)) = <b>2</b></td><td>1</td><td>0</td><td><b>2</b></td><td>0</td><td class="ok">OK</td></tr>
+<tr style="background:rgba(220,60,60,.08)"><td>3</td><td style="font-family:'IBM Plex Mono',monospace">w1(y)</td><td style="font-size:12px">ts(T1)=1 &#8805; WTM(y)=0 <span class="ok">&#10003;</span> &nbsp;<b>ma</b>&nbsp; ts(T1)=1 &lt; RTM(y)=2 <span class="no">&#10007;</span></td><td>1</td><td>0</td><td>2</td><td>0</td><td class="no">T1 KILLED</td></tr>
+<tr><td>4</td><td style="font-family:'IBM Plex Mono',monospace">w2(x)</td><td style="font-size:12px">ts(T2)=2 &#8805; WTM(x)=0 <span class="ok">&#10003;</span>, ts(T2)=2 &#8805; RTM(x)=1 <span class="ok">&#10003;</span>; WTM(x)&#8594;<b>2</b></td><td>1</td><td><b>2</b></td><td>2</td><td>0</td><td class="ok">OK</td></tr>
+</tbody>
+</table>
+<div style="font-size:12.5px;color:var(--ink-soft);margin-top:8px">T1 viene uccisa perché T2 ha già letto y con timestamp 2 &gt; ts(T1)=1: T1 starebbe scrivendo una versione "del passato" che T2 ha già letto in uno stato diverso.</div>
+</div>
+
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em">ESEMPIO GUIDATO — TS MULTI / SNAPSHOT ISOLATION (RTM/WTM, nessun kill)</div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 12px;margin-bottom:6px;overflow-x:auto;white-space:nowrap">
+  H = <span style="color:var(--phys)">r1(b)</span> <span style="color:var(--rank)">r2(a)</span> <span style="color:var(--rank)">w2(a)</span> <span style="color:var(--phys)">r1(c)</span> <span style="color:var(--rank)">w2(b)</span> <span style="color:var(--rank)">r2(c)</span> <span style="color:var(--rank)">w2(c)</span> <span style="color:var(--phys)">r1(a)</span> &nbsp;&#183;&nbsp; ts(T1)=1, ts(T2)=2
+</div>
+<p style="font-size:12px;color:var(--ink-soft);margin-bottom:6px">Notazione: RTM(x)=<b>i(j)</b> significa che T_i ha letto x quando WTM(x) era j (snapshot). Stato iniziale: tutti 0.</p>
+<div style="overflow-x:auto">
+<table class="gtbl" style="white-space:nowrap;font-size:12px">
+<thead><tr><th>#</th><th>Op</th><th>Controllo / Aggiornamento</th><th>RTM(a)</th><th>WTM(a)</th><th>RTM(b)</th><th>WTM(b)</th><th>RTM(c)</th><th>WTM(c)</th><th>Esito</th></tr></thead>
+<tbody>
+<tr><td>1</td><td style="font-family:'IBM Plex Mono',monospace">r1(b)</td><td style="font-size:11.5px">RTM(b) = <b>1(0)</b> — T1 legge versione WTM=0</td><td>0</td><td>0</td><td><b>1(0)</b></td><td>0</td><td>0</td><td>0</td><td class="ok">OK</td></tr>
+<tr><td>2</td><td style="font-family:'IBM Plex Mono',monospace">r2(a)</td><td style="font-size:11.5px">RTM(a) = <b>2(0)</b> — T2 legge versione WTM=0</td><td><b>2(0)</b></td><td>0</td><td>1(0)</td><td>0</td><td>0</td><td>0</td><td class="ok">OK</td></tr>
+<tr><td>3</td><td style="font-family:'IBM Plex Mono',monospace">w2(a)</td><td style="font-size:11.5px">ts(T2)=2 &#8805; WTM(a)=0 &#10003;, ts(T2)=2 &#8805; ts(RTM(a))=2 &#10003;; WTM(a)&#8594;2</td><td>2(0)</td><td><b>2</b></td><td>1(0)</td><td>0</td><td>0</td><td>0</td><td class="ok">OK</td></tr>
+<tr><td>4</td><td style="font-family:'IBM Plex Mono',monospace">r1(c)</td><td style="font-size:11.5px">RTM(c) = <b>1(0)</b> — T1 legge versione WTM=0</td><td>2(0)</td><td>2</td><td>1(0)</td><td>0</td><td><b>1(0)</b></td><td>0</td><td class="ok">OK</td></tr>
+<tr><td>5</td><td style="font-family:'IBM Plex Mono',monospace">w2(b)</td><td style="font-size:11.5px">ts(T2)=2 &#8805; WTM(b)=0 &#10003;, ts(T2)=2 &#8805; ts(RTM(b))=1 &#10003;; WTM(b)&#8594;2</td><td>2(0)</td><td>2</td><td>1(0)</td><td><b>2</b></td><td>1(0)</td><td>0</td><td class="ok">OK</td></tr>
+<tr><td>6</td><td style="font-family:'IBM Plex Mono',monospace">r2(c)</td><td style="font-size:11.5px">RTM(c) = <b>2(0)</b> — T2 legge versione WTM=0</td><td>2(0)</td><td>2</td><td>1(0)</td><td>2</td><td><b>2(0)</b></td><td>0</td><td class="ok">OK</td></tr>
+<tr><td>7</td><td style="font-family:'IBM Plex Mono',monospace">w2(c)</td><td style="font-size:11.5px">ts(T2)=2 &#8805; WTM(c)=0 &#10003;, ts(T2)=2 &#8805; ts(RTM(c))=2 &#10003;; WTM(c)&#8594;2</td><td>2(0)</td><td>2</td><td>1(0)</td><td>2</td><td>2(0)</td><td><b>2</b></td><td class="ok">OK</td></tr>
+<tr><td>8</td><td style="font-family:'IBM Plex Mono',monospace">r1(a)</td><td style="font-size:11.5px">T1 legge snapshot: WTM(a)=2 ma T1 usa versione WTM=0 (snapshot al suo start ts=1)</td><td>2(0)</td><td>2</td><td>1(0)</td><td>2</td><td>2(0)</td><td>2</td><td class="ok">OK</td></tr>
+</tbody>
+</table>
+</div>
+<div style="background:rgba(60,180,100,.08);border:1px solid var(--d-low);border-radius:8px;padding:10px 12px;font-size:12.5px;margin-top:10px">
+  <span style="color:var(--d-low);font-weight:600">Nessuna KILL!</span> &nbsp;T1 legge sempre dal suo snapshot (WTM=0 al momento dello start ts=1). T2 scrive ma ts(T2)=2 &#8805; tutti i RTM. In TS Multi le letture di T1 non "bloccano" le scritture di T2 come accadrebbe in TS Mono: ogni versione scritta convive con la versione di snapshot.
+</div>
 </div>`,
 
 `<h3 class="gsub">Cos'è il deadlock distribuito</h3>
