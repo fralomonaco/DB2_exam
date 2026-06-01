@@ -174,6 +174,38 @@
   .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
   .donut-center .pc{font-family:'Fraunces',serif;font-weight:600;line-height:1}
   .donut-center .lb{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em}
+  /* ── Obermarck visual diagrams ── */
+  .ob-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}
+  @media(max-width:520px){.ob-grid{grid-template-columns:1fr}}
+  .ob-node{background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ob-node-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+  .ob-chain{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin:3px 0}
+  .ob-t{background:var(--conc);color:#fff;border-radius:4px;padding:2px 7px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;white-space:nowrap}
+  .ob-t.nx{background:var(--rank)}
+  .ob-t.dead{background:var(--d-high);color:#fff}
+  .ob-e{border:1.5px solid #6b7280;color:#8a9bb5;border-radius:4px;padding:2px 7px;font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap}
+  .ob-e.na{border-color:var(--conc);color:var(--conc)}.ob-e.nb{border-color:var(--rank);color:var(--rank)}
+  .ob-e.nc{border-color:var(--trig);color:var(--trig)}.ob-e.nd{border-color:var(--jpa);color:var(--jpa)}
+  .ob-arr{color:var(--ink-soft);font-size:12px;padding:0 1px}
+  .ob-iter{margin:12px 0;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+  .ob-iter-hd{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--paper);border-bottom:1px solid var(--line)}
+  .ob-iter-n{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.12em;background:var(--conc);color:#fff;padding:3px 9px;border-radius:20px;text-transform:uppercase;flex:none}
+  .ob-iter-ttl{font-size:13px;font-weight:600}
+  .ob-iter-body{padding:12px 14px;background:var(--paper2)}
+  .ob-send{display:flex;align-items:center;gap:6px;margin:8px 0;flex-wrap:wrap}
+  .ob-nd{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;padding:4px 11px;border-radius:6px;color:#fff;flex:none}
+  .ob-line{flex:1;display:flex;align-items:center;min-width:16px}
+  .ob-line-dash{flex:1;height:2px;opacity:.5}
+  .ob-line-tip{font-size:13px;margin-left:-1px}
+  .ob-msgs{margin:6px 0 4px;display:flex;flex-direction:column;gap:4px}
+  .ob-msg{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .ob-ok{color:var(--d-low);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600}
+  .ob-recv{background:rgba(47,211,152,.07);border:1px solid rgba(47,211,152,.25);border-radius:8px;padding:8px 12px;margin-top:10px}
+  .ob-recv-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--trig);margin-bottom:5px}
+  .ob-note{font-size:11.5px;color:var(--ink-soft);margin-top:5px}
+  .ob-dl{background:rgba(220,60,60,.10);border:2px solid #e05555;border-radius:10px;padding:12px 16px;margin-top:12px;text-align:center}
+  .ob-dl-h{font-family:'Fraunces',serif;font-weight:900;font-size:18px;color:#e05555;margin-bottom:6px}
+
 </style>
 </head>
 <body>
@@ -369,17 +401,126 @@ Esempio: A riceve <code>E_A → T2 → T5 → E_A</code> da B. Ora il WFG di A c
 Questo è voluto: Obermarck accumula <b>conoscenza distribuita</b> tramite i messaggi. Un nodo non vede solo le proprie transazioni, ma anche quelle arrivate via messaggi, per poter rilevare cicli globali.</p>
 </div>
 
-<div class="gbox ex"><div class="gbox-label">Esempio TDE Feb 2026 (convenzione i &lt; j) — traccia delle iterazioni</div>
-<p><b>Stato iniziale:</b><br>
-A: E_D→T4→T3→E_D<br>
-B: E_C→T5→E_A · E_B→T5→E_D · E_D→T2→E_C · E_C→T8<br>
-C: E_D→T8→T5→E_B · E_A→T2→T3→T8→E_B<br>
-D: E_A→T5→T4→E_A · E_A→T3→T2→E_A · T8→E_C</p>
-<p><b>Iter 1 — At C:</b> C ha E_A→T2→T3→T8→E_B (T2&lt;T8 ✓) e E_A→T2→T5→E_B (T2&lt;T5 ✓) → invia entrambi a B.</p>
-<p><b>Iter 2 — At B:</b> B ha ricevuto E_A→T2→T5→E_B. Localmente B ha E_C→T5→E_A (T5 esce verso A). Concatenando: E_A→T2→T5→E_A (T2&lt;T5 ✓) → invia a A.</p>
-<p><b>Iter 3 — At A:</b> A ha ricevuto E_A→T2→T5→E_A. A ha localmente E_D→T4→T3→E_D. Concatenando con la parte T2→T5→E_D? No: A cerca nuovi cammini E_X→…→E_Y. Trova E_D→T2→T5→E_D (combinando il ricevuto con la conoscenza su T2) → invia a D.</p>
-<p><b>Iter 4 — At D:</b> D ha ricevuto E_D→T2→T5→E_D e localmente ha E_A→T3→T2→E_A e E_A→T5→T4→E_A. Concatenando E_A→T3→T4→E_A (T3&lt;T4 ✓) → invia a A.<br>
-<b>At A:</b> A riceve E_A→T3→T4→E_A. A ha localmente T4→T3 (da E_D→T4→T3→E_D). Ciclo: T3→T4→T3. <b>DEADLOCK rilevato!</b></p>
+<h3 class="gsub" style="margin-top:18px">Esempio visivo — TDE Febbraio 2026 (convenzione i &lt; j)</h3>
+
+<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">Stato iniziale — ogni riga dentro un nodo è un cammino di attesa:</p>
+<div class="ob-grid">
+  <div class="ob-node">
+    <div class="ob-node-lbl" style="color:var(--conc)">Nodo A</div>
+    <div class="ob-chain"><span class="ob-e nd">E_D</span><span class="ob-arr">→</span><span class="ob-t">T4</span><span class="ob-arr">→</span><span class="ob-t">T3</span><span class="ob-arr">→</span><span class="ob-e nd">E_D</span></div>
+  </div>
+  <div class="ob-node">
+    <div class="ob-node-lbl" style="color:var(--rank)">Nodo B</div>
+    <div class="ob-chain"><span class="ob-e nc">E_C</span><span class="ob-arr">→</span><span class="ob-t">T5</span><span class="ob-arr">→</span><span class="ob-e na">E_A</span></div>
+    <div class="ob-chain"><span class="ob-e nb">E_B</span><span class="ob-arr">→</span><span class="ob-t">T5</span><span class="ob-arr">→</span><span class="ob-e nd">E_D</span></div>
+    <div class="ob-chain"><span class="ob-e nd">E_D</span><span class="ob-arr">→</span><span class="ob-t">T2</span><span class="ob-arr">→</span><span class="ob-e nc">E_C</span></div>
+    <div class="ob-chain"><span class="ob-e nc">E_C</span><span class="ob-arr">→</span><span class="ob-t">T8</span></div>
+  </div>
+  <div class="ob-node">
+    <div class="ob-node-lbl" style="color:var(--trig)">Nodo C</div>
+    <div class="ob-chain"><span class="ob-e nd">E_D</span><span class="ob-arr">→</span><span class="ob-t">T8</span><span class="ob-arr">→</span><span class="ob-t">T5</span><span class="ob-arr">→</span><span class="ob-e nb">E_B</span></div>
+    <div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t">T2</span><span class="ob-arr">→</span><span class="ob-t">T3</span><span class="ob-arr">→</span><span class="ob-t">T8</span><span class="ob-arr">→</span><span class="ob-e nb">E_B</span></div>
+  </div>
+  <div class="ob-node">
+    <div class="ob-node-lbl" style="color:var(--jpa)">Nodo D</div>
+    <div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t">T5</span><span class="ob-arr">→</span><span class="ob-t">T4</span><span class="ob-arr">→</span><span class="ob-e na">E_A</span></div>
+    <div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t">T3</span><span class="ob-arr">→</span><span class="ob-t">T2</span><span class="ob-arr">→</span><span class="ob-e na">E_A</span></div>
+    <div class="ob-chain"><span class="ob-t">T8</span><span class="ob-arr">→</span><span class="ob-e nc">E_C</span></div>
+  </div>
+</div>
+
+<div class="ob-iter">
+  <div class="ob-iter-hd">
+    <span class="ob-iter-n">Iter 1</span>
+    <span class="ob-iter-ttl">Nodo C trova cammini validi → li manda a B</span>
+  </div>
+  <div class="ob-iter-body">
+    <div class="ob-send">
+      <span class="ob-nd" style="background:var(--trig)">C</span>
+      <div class="ob-line" style="color:var(--rank)"><div class="ob-line-dash" style="background:var(--rank)"></div><div class="ob-line-tip" style="color:var(--rank)">▶</div></div>
+      <span class="ob-nd" style="background:var(--rank)">B</span>
+    </div>
+    <div class="ob-msgs">
+      <div class="ob-msg"><div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t">T2</span><span class="ob-arr">→</span><span class="ob-t">T8</span><span class="ob-arr">→</span><span class="ob-e nb">E_B</span></div><span class="ob-ok">T2&lt;T8 ✓</span></div>
+      <div class="ob-msg"><div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t">T2</span><span class="ob-arr">→</span><span class="ob-t">T5</span><span class="ob-arr">→</span><span class="ob-e nb">E_B</span></div><span class="ob-ok">T2&lt;T5 ✓</span></div>
+    </div>
+    <div class="ob-recv">
+      <div class="ob-recv-lbl">B aggiorna il WFG (2 nuovi cammini evidenziati)</div>
+      <div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t nx">T2</span><span class="ob-arr">→</span><span class="ob-t nx">T8</span><span class="ob-arr">→</span><span class="ob-e nb">E_B</span></div>
+      <div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t nx">T2</span><span class="ob-arr">→</span><span class="ob-t nx">T5</span><span class="ob-arr">→</span><span class="ob-e nb">E_B</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="ob-iter">
+  <div class="ob-iter-hd">
+    <span class="ob-iter-n">Iter 2</span>
+    <span class="ob-iter-ttl">Nodo B concatena → manda ad A</span>
+  </div>
+  <div class="ob-iter-body">
+    <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">B ha ricevuto <code>E_A→T2→T5→E_B</code> (da Iter 1). Localmente B ha <code>E_C→T5→E_A</code>: T5 esce verso A. Concatenando i due cammini su T5 → il cammino "torna" ad A:</p>
+    <div class="ob-send">
+      <span class="ob-nd" style="background:var(--rank)">B</span>
+      <div class="ob-line"><div class="ob-line-dash" style="background:var(--conc)"></div><div class="ob-line-tip" style="color:var(--conc)">▶</div></div>
+      <span class="ob-nd" style="background:var(--conc)">A</span>
+    </div>
+    <div class="ob-msgs">
+      <div class="ob-msg"><div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t">T2</span><span class="ob-arr">→</span><span class="ob-t">T5</span><span class="ob-arr">→</span><span class="ob-e na">E_A</span></div><span class="ob-ok">T2&lt;T5 ✓</span></div>
+    </div>
+    <div class="ob-recv">
+      <div class="ob-recv-lbl">A aggiorna il WFG (1 nuovo cammino)</div>
+      <div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t nx">T2</span><span class="ob-arr">→</span><span class="ob-t nx">T5</span><span class="ob-arr">→</span><span class="ob-e na">E_A</span></div>
+      <p class="ob-note">I due estremi sono entrambi E_A, ma T2 e T5 vivono su altri nodi — A propaga il cammino prima di dichiarare deadlock.</p>
+    </div>
+  </div>
+</div>
+
+<div class="ob-iter">
+  <div class="ob-iter-hd">
+    <span class="ob-iter-n">Iter 3</span>
+    <span class="ob-iter-ttl">Nodo A combina → manda a D</span>
+  </div>
+  <div class="ob-iter-body">
+    <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">A conosce <code>E_A→T2→T5→E_A</code> (ricevuto) e localmente <code>E_D→T4→T3→E_D</code>. Combinando, costruisce un cammino che esce verso D:</p>
+    <div class="ob-send">
+      <span class="ob-nd" style="background:var(--conc)">A</span>
+      <div class="ob-line"><div class="ob-line-dash" style="background:var(--jpa)"></div><div class="ob-line-tip" style="color:var(--jpa)">▶</div></div>
+      <span class="ob-nd" style="background:var(--jpa)">D</span>
+    </div>
+    <div class="ob-msgs">
+      <div class="ob-msg"><div class="ob-chain"><span class="ob-e nd">E_D</span><span class="ob-arr">→</span><span class="ob-t">T2</span><span class="ob-arr">→</span><span class="ob-t">T5</span><span class="ob-arr">→</span><span class="ob-e nd">E_D</span></div><span class="ob-ok">T2&lt;T5 ✓</span></div>
+    </div>
+    <div class="ob-recv">
+      <div class="ob-recv-lbl">D aggiorna il WFG (1 nuovo cammino)</div>
+      <div class="ob-chain"><span class="ob-e nd">E_D</span><span class="ob-arr">→</span><span class="ob-t nx">T2</span><span class="ob-arr">→</span><span class="ob-t nx">T5</span><span class="ob-arr">→</span><span class="ob-e nd">E_D</span></div>
+      <p class="ob-note">Il diagramma nella soluzione mostra D (non A): vedi T8 perché D aveva già T8→E_C nel suo WFG originale.</p>
+    </div>
+  </div>
+</div>
+
+<div class="ob-iter">
+  <div class="ob-iter-hd">
+    <span class="ob-iter-n">Iter 4</span>
+    <span class="ob-iter-ttl">Nodo D combina → manda ad A — ciclo trovato!</span>
+  </div>
+  <div class="ob-iter-body">
+    <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">D combina <code>E_D→T2→T5→E_D</code> (ricevuto) con i suoi cammini locali <code>E_A→T5→T4→E_A</code> e <code>E_A→T3→T2→E_A</code> → trova T3→T4 verso A:</p>
+    <div class="ob-send">
+      <span class="ob-nd" style="background:var(--jpa)">D</span>
+      <div class="ob-line"><div class="ob-line-dash" style="background:var(--conc)"></div><div class="ob-line-tip" style="color:var(--conc)">▶</div></div>
+      <span class="ob-nd" style="background:var(--conc)">A</span>
+    </div>
+    <div class="ob-msgs">
+      <div class="ob-msg"><div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t">T3</span><span class="ob-arr">→</span><span class="ob-t">T4</span><span class="ob-arr">→</span><span class="ob-e na">E_A</span></div><span class="ob-ok">T3&lt;T4 ✓</span></div>
+    </div>
+    <div class="ob-dl">
+      <div class="ob-dl-h">&#128128; DEADLOCK rilevato ad A</div>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:6px 0 10px">A riceve E_A→T3→T4→E_A e ha già localmente T4→T3. Il ciclo si chiude:</p>
+      <div class="ob-chain" style="justify-content:center;gap:6px">
+        <span class="ob-t dead">T3</span><span style="font-size:16px;color:#e05555">→</span><span class="ob-t dead">T4</span><span style="font-size:16px;color:#e05555">→</span><span class="ob-t dead">T3</span><span style="font-size:20px;margin-left:4px">&#128308;</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="gbox ex"><div class="gbox-label">Esempio — TDE Febbraio 2024 (convenzione i&gt;j)</div>
