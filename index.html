@@ -317,11 +317,67 @@ const GUIDES = {
 </div></div>
 </div>
 
-<div class="gbox ex"><div class="gbox-label">Esempio — TDE Giugno 2024</div>
-<p><b>S =</b> r1(Z) r2(X) w2(Y) w3(Y) w4(Z) w2(Z) w5(X) r5(Y) w4(X) r6(Y) w6(X)</p>
-<p>Conflitti su X: r2(X)→w4(X), r2(X)→w5(X), w4(X)↔w5(X) → archi T2→T4, T2→T5, T5→T4 (o T4→T5).<br>
-Conflitti su Z: w4(Z)→w2(Z) → arco T4→T2. Ma anche r2(X)→w4(X) → T2→T4.<br>
-<b>Ciclo T2→T4→T2</b>: NON CSR, NON 2PL, NON Strict 2PL.</p>
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em">TDE GIUGNO 2024 — GRAFO DEI CONFLITTI</div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 12px;margin-bottom:12px;overflow-x:auto;white-space:nowrap">
+S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="color:var(--rank)">r2(X)</span>&nbsp;<span style="color:var(--rank)">w2(Y)</span>&nbsp;<span style="color:var(--trig)">w3(Y)</span>&nbsp;<span style="color:var(--jpa)">w4(Z)</span>&nbsp;<span style="color:var(--rank)">w2(Z)</span>&nbsp;<span style="color:var(--phys)">w5(X)</span>&nbsp;<span style="color:var(--phys)">r5(Y)</span>&nbsp;<span style="color:var(--jpa)">w4(X)</span>&nbsp;<span style="color:var(--theo)">r6(Y)</span>&nbsp;<span style="color:var(--theo)">w6(X)</span>
+</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+<svg viewBox="0 0 300 230" width="220" style="flex:none;min-width:180px" aria-label="Grafo dei conflitti">
+  <defs>
+    <marker id="ag2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#6b7280" opacity=".7"/></marker>
+    <marker id="ar2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#e05555"/></marker>
+  </defs>
+  <!-- Gray arcs -->
+  <line x1="68" y1="77" x2="152" y2="50" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".55"/>
+  <line x1="64" y1="88" x2="150" y2="170" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".55"/>
+  <line x1="188" y1="45" x2="260" y2="75" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".55"/>
+  <line x1="154" y1="55" x2="68" y2="168" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".5"/>
+  <line x1="186" y1="55" x2="264" y2="172" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".5"/>
+  <line x1="270" y1="100" x2="270" y2="172" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".55"/>
+  <line x1="268" y1="96" x2="72" y2="180" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".35"/>
+  <line x1="70" y1="190" x2="148" y2="190" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".55"/>
+  <line x1="188" y1="192" x2="262" y2="192" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".55"/>
+  <line x1="70" y1="197" x2="264" y2="197" stroke="#6b7280" stroke-width="1.2" marker-end="url(#ag2)" opacity=".3"/>
+  <!-- RED CYCLE: T2→T4 (right curve) and T4→T2 (left curve) -->
+  <path d="M182,55 C215,80 215,158 182,175" stroke="#e05555" stroke-width="2.2" fill="none" marker-end="url(#ar2)"/>
+  <path d="M148,175 C118,155 118,68 148,55" stroke="#e05555" stroke-width="2.2" fill="none" marker-end="url(#ar2)"/>
+  <!-- Nodes -->
+  <circle cx="50" cy="88" r="20" fill="var(--bg2)" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="50" y="93" text-anchor="middle" fill="#c9b8a0" font-size="12" font-family="monospace" font-weight="600">T1</text>
+  <circle cx="170" cy="40" r="22" fill="#2c1818" stroke="#e05555" stroke-width="2.5"/>
+  <text x="170" y="45" text-anchor="middle" fill="#e05555" font-size="12" font-family="monospace" font-weight="700">T2</text>
+  <circle cx="278" cy="88" r="20" fill="var(--bg2)" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="278" y="93" text-anchor="middle" fill="#c9b8a0" font-size="12" font-family="monospace" font-weight="600">T3</text>
+  <circle cx="170" cy="190" r="22" fill="#2c1818" stroke="#e05555" stroke-width="2.5"/>
+  <text x="170" y="195" text-anchor="middle" fill="#e05555" font-size="12" font-family="monospace" font-weight="700">T4</text>
+  <circle cx="50" cy="190" r="20" fill="var(--bg2)" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="50" y="195" text-anchor="middle" fill="#c9b8a0" font-size="12" font-family="monospace" font-weight="600">T5</text>
+  <circle cx="278" cy="190" r="20" fill="var(--bg2)" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="278" y="195" text-anchor="middle" fill="#c9b8a0" font-size="12" font-family="monospace" font-weight="600">T6</text>
+  <text x="224" y="120" text-anchor="middle" fill="#e05555" font-size="11" font-family="monospace" font-weight="700">CICLO!</text>
+</svg>
+<div style="flex:1;min-width:160px;font-size:12.5px;color:var(--ink-soft)">
+  <div style="margin-bottom:8px"><b style="color:var(--ink)">Conflitti su Z:</b><br>
+    r1(Z)→w4(Z) → T1→T4<br>
+    <span style="color:#e05555;font-weight:600">w4(Z)→w2(Z) → T4→T2 ←</span>
+  </div>
+  <div style="margin-bottom:8px"><b style="color:var(--ink)">Conflitti su X:</b><br>
+    <span style="color:#e05555;font-weight:600">r2(X)→w4(X) → T2→T4 ←</span><br>
+    r2(X)→w5(X) → T2→T5<br>
+    w5(X)→w4(X) → T5→T4
+  </div>
+  <div style="margin-bottom:10px"><b style="color:var(--ink)">Conflitti su Y:</b><br>
+    w2(Y)→w3(Y) → T2→T3<br>
+    w3(Y)→r5(Y) → T3→T5<br>
+    w2,w3→r6 → T2,T3→T6
+  </div>
+  <div style="background:rgba(224,85,85,.12);border:1px solid #e05555;border-radius:8px;padding:8px 10px;font-weight:600;color:#e05555;font-size:12px">
+    Ciclo T2 → T4 → T2<br>
+    <span style="color:var(--ink-soft);font-weight:400;font-size:11.5px">→ NON CSR · NON 2PL · NON Strict 2PL</span>
+  </div>
+</div>
+</div>
 </div>
 
 <h3 class="gsub">Passo 2 — VSR (se NON CSR)</h3>
@@ -523,9 +579,35 @@ Questo è voluto: Obermarck accumula <b>conoscenza distribuita</b> tramite i mes
   </div>
 </div>
 
-<div class="gbox ex"><div class="gbox-label">Esempio — TDE Febbraio 2024 (convenzione i&gt;j)</div>
-<p>Nodo B ha: E_A→t5→t6→t1→E_C. Poiché 5&gt;1, trasmette EA→t5→t1→EC a Nodo A.<br>
-Nodo A integra: ora ha E_A→t5→t4→E_A. <b>Ciclo rilevato → deadlock!</b></p>
+<h3 class="gsub" style="margin-top:18px">Esempio — TDE Febbraio 2024 (convenzione i &gt; j)</h3>
+<div class="ob-iter">
+  <div class="ob-iter-hd">
+    <span class="ob-iter-n">Iter 1</span>
+    <span class="ob-iter-ttl">Nodo B trova un cammino valido → manda ad A</span>
+  </div>
+  <div class="ob-iter-body">
+    <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">B ha nel suo WFG il cammino <code>E_A → t5 → t6 → t1 → E_C</code>. Convenzione i&gt;j: confronta il primo T (t5, i=5) con l'ultimo T (t1, j=1). Poiché 5&gt;1 ✓, trasmette il cammino condensato a C:</p>
+    <div class="ob-send">
+      <span class="ob-nd" style="background:var(--rank)">B</span>
+      <div class="ob-line"><div class="ob-line-dash" style="background:var(--conc)"></div><div class="ob-line-tip" style="color:var(--conc)">▶</div></div>
+      <span class="ob-nd" style="background:var(--conc)">A</span>
+    </div>
+    <div class="ob-msgs">
+      <div class="ob-msg"><div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t">t5</span><span class="ob-arr">→</span><span class="ob-t">t1</span><span class="ob-arr">→</span><span class="ob-e nc">E_C</span></div><span class="ob-ok">5&gt;1 ✓</span></div>
+    </div>
+    <div class="ob-recv">
+      <div class="ob-recv-lbl">A aggiorna il WFG</div>
+      <div class="ob-chain"><span class="ob-e na">E_A</span><span class="ob-arr">→</span><span class="ob-t nx">t5</span><span class="ob-arr">→</span><span class="ob-t nx">t1</span><span class="ob-arr">→</span><span class="ob-e nc">E_C</span></div>
+      <p class="ob-note">A combina questo cammino con quelli già presenti e trova: <code>E_A → t5 → t4 → E_A</code> — entrambi gli estremi sono E_A.</p>
+    </div>
+  </div>
+</div>
+<div class="ob-dl" style="margin-top:0">
+  <div class="ob-dl-h">&#128128; DEADLOCK rilevato ad A</div>
+  <p style="font-size:12.5px;color:var(--ink-soft);margin:6px 0 10px">A ha nel suo WFG il cammino E_A → t5 → t4 → E_A. Il ciclo coinvolge t5 e t4:</p>
+  <div class="ob-chain" style="justify-content:center;gap:6px">
+    <span class="ob-t dead">t5</span><span style="font-size:16px;color:#e05555">→</span><span class="ob-t dead">t4</span><span style="font-size:16px;color:#e05555">→</span><span class="ob-t dead">t5</span><span style="font-size:20px;margin-left:4px">&#128308;</span>
+  </div>
 </div>
 <div class="gbox warn"><div class="gbox-label">Errore comune</div>
 <p>Non dimenticare di verificare i <b>nuovi cammini creabili</b> dopo ogni ricezione. Dopo che un nodo riceve un cammino e lo integra, potrebbe avere nuovi cammini da trasmettere che prima non esistevano.</p>
@@ -557,10 +639,30 @@ Nodo A integra: ora ha E_A→t5→t4→E_A. <b>Ciclo rilevato → deadlock!</b><
 </div></div>
 </div>
 
-<div class="gbox ex"><div class="gbox-label">Esempio — TDE Gennaio 2025 (hotel, distanze = lower-is-better)</div>
-<p>Ordinati per ts crescente: a(0.30,0.80), d(0.40,0.90), h(0.50,0.70)...<br>
-<b>a</b>: skyline. <b>d</b>: a ≺ d (0.30&lt;0.40 e 0.80&lt;0.90) → fuori. <b>h</b>: a non domina h (h migliore su ch) → skyline.<br>
-<b>Skyline finale = {a, h, b, e, i}</b></p>
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--rank);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">SFS — TDE Gennaio 2025 · distanze lower-is-better · ordinamento per ts ↑</div>
+<div style="overflow-x:auto">
+<table class="gtbl" style="white-space:nowrap">
+<tr><th>#</th><th>Hotel</th><th>ts</th><th>ch</th><th>Dominato da</th><th>Risultato</th></tr>
+<tr><td>1</td><td><b>a</b></td><td>0.30</td><td>0.80</td><td>—</td><td style="color:var(--d-low);font-weight:700">✓ skyline</td></tr>
+<tr><td>2</td><td>d</td><td>0.40</td><td>0.90</td><td>a (0.30≤0.40 e 0.80≤0.90)</td><td style="color:var(--d-high);font-weight:700">✗ fuori</td></tr>
+<tr><td>3</td><td><b>h</b></td><td>0.50</td><td>0.70</td><td>a: ch 0.80 &gt; 0.70 → no</td><td style="color:var(--d-low);font-weight:700">✓ skyline</td></tr>
+<tr><td>4</td><td><b>b</b></td><td>0.55</td><td>0.45</td><td>nessuno</td><td style="color:var(--d-low);font-weight:700">✓ skyline</td></tr>
+<tr><td>5</td><td><b>e</b></td><td>0.60</td><td>0.20</td><td>nessuno</td><td style="color:var(--d-low);font-weight:700">✓ skyline</td></tr>
+<tr><td>6</td><td>f</td><td>0.60</td><td>0.90</td><td>a (0.30≤0.60 e 0.80≤0.90)</td><td style="color:var(--d-high);font-weight:700">✗ fuori</td></tr>
+<tr><td>7</td><td>c</td><td>0.70</td><td>0.30</td><td>e (0.60≤0.70 e 0.20≤0.30)</td><td style="color:var(--d-high);font-weight:700">✗ fuori</td></tr>
+<tr><td>8</td><td><b>i</b></td><td>0.80</td><td>0.10</td><td>nessuno</td><td style="color:var(--d-low);font-weight:700">✓ skyline</td></tr>
+<tr><td>9</td><td>g</td><td>0.90</td><td>0.15</td><td>i (0.80≤0.90 e 0.10≤0.15)</td><td style="color:var(--d-high);font-weight:700">✗ fuori</td></tr>
+</table>
+</div>
+<div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);letter-spacing:.08em">SKYLINE =</span>
+  <span style="background:var(--rank);color:#fff;border-radius:5px;padding:3px 9px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">a</span>
+  <span style="background:var(--rank);color:#fff;border-radius:5px;padding:3px 9px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">h</span>
+  <span style="background:var(--rank);color:#fff;border-radius:5px;padding:3px 9px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">b</span>
+  <span style="background:var(--rank);color:#fff;border-radius:5px;padding:3px 9px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">e</span>
+  <span style="background:var(--rank);color:#fff;border-radius:5px;padding:3px 9px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">i</span>
+</div>
 </div>
 
 <h3 class="gsub">k-Skyband</h3>
@@ -589,10 +691,27 @@ Nodo A integra: ora ha E_A→t5→t4→E_A. <b>Ciclo rilevato → deadlock!</b><
 <div class="gbox warn"><div class="gbox-label">FA richiede funzione monotona</div>
 <p>FA è corretto solo se la funzione di scoring è <b>monotona</b> (aumentare un attributo non diminuisce mai lo score). Con funzioni non monotone FA può dare risultati sbagliati.</p>
 </div>
-<div class="gbox ex"><div class="gbox-label">Esempio — TDE Febbraio 2025 (top-2, f=4A+2B+C)</div>
-<p>Round 1: vedo 1(A), 2(B), 2(C). Round 2: 7(A), 1(B), 7(C). Round 3: 2(A), 3(B), 3(C). Round 4: 3(A), 4(B), 1(C).<br>
-Elementi comuni in tutte e 3 le liste dopo round 4: {1,2,3} (≥ k=2). <b>STOP.</b><br>
-Accessi casuali: score di 4, 7. Top-2: {1(5.45), 2(5.00)}.</p>
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--rank);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">FA — TDE Feb 2025 · top-2 · f = 4A + 2B + C</div>
+<div style="overflow-x:auto">
+<table class="gtbl" style="white-space:nowrap">
+<tr><th>Round</th><th>Lista A (s.a.)</th><th>Lista B (s.a.)</th><th>Lista C (s.a.)</th><th>Visti finora</th><th>Comuni a tutte</th></tr>
+<tr><td>1</td><td>obj <b>1</b></td><td>obj <b>2</b></td><td>obj <b>2</b></td><td>{1, 2}</td><td>— (1 non in B,C; 2 non in A)</td></tr>
+<tr><td>2</td><td>obj <b>7</b></td><td>obj <b>1</b></td><td>obj <b>7</b></td><td>{1, 2, 7}</td><td>1 (in A via r.2, in B via r.2, in C?) → parziale</td></tr>
+<tr><td>3</td><td>obj <b>2</b></td><td>obj <b>3</b></td><td>obj <b>3</b></td><td>{1,2,3,7}</td><td>2 (ora in A,B,C?), 3 parziale</td></tr>
+<tr style="background:rgba(255,122,61,.07)"><td><b>4</b></td><td>obj <b>3</b></td><td>obj <b>4</b></td><td>obj <b>1</b></td><td>{1,2,3,4,7}</td><td style="color:var(--d-low);font-weight:700">{1, 2, 3} ≥ k=2 → STOP ✓</td></tr>
+</table>
+</div>
+<div style="margin-top:10px;font-size:12.5px;color:var(--ink-soft)">
+<b style="color:var(--ink)">Fase 2 — accessi casuali</b> per completare gli score degli elementi non ancora visti su tutte le liste:<br>
+obj 4 e obj 7 (visti solo in alcune liste) → r.a. per completarli.<br>
+</div>
+<div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap">
+  <div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px">obj <b>1</b> → score <b style="color:var(--rank)">5.45</b></div>
+  <div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px">obj <b>2</b> → score <b style="color:var(--rank)">5.00</b></div>
+  <div style="background:rgba(255,122,61,.12);border:1px solid var(--rank);border-radius:8px;padding:8px 12px;font-weight:700;font-size:12px">Top-2 = { 1, 2 } &nbsp;✓</div>
+</div>
+<div style="margin-top:8px;font-size:11.5px;color:var(--ink-soft)">s.a. totali = 12 (4 round × 3 liste) · r.a. aggiuntivi per score incompleti</div>
 </div>`,
 
 `<h3 class="gsub">Cos'è TA (Threshold Algorithm)</h3>
@@ -612,10 +731,36 @@ Accessi casuali: score di 4, 7. Top-2: {1(5.45), 2(5.00)}.</p>
   <p>Nessun elemento non visto può superare il k-esimo: output i k migliori nel buffer.</p>
 </div></div>
 </div>
-<div class="gbox ex"><div class="gbox-label">Esempio — TDE Gennaio 2024 (top-2, funzione MAX)</div>
-<p>Round 1: A(0.9), B(0.9), F(1.0). Score F=1.0, A=0.9, B=0.9. T=MAX(0.9,0.9,1.0)=1.0. Buffer: {F(1.0), A(0.9)}.<br>
-Round 2: B(0.8), D(0.8), D(0.9). T=MAX(0.8,0.8,0.9)=0.9. 2° nel buffer = A con 0.9 ≥ T=0.9. <b>STOP.</b><br>
-Top-2 = {F, A}. s.a.=6.</p>
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--rank);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">TA — TDE Gennaio 2024 · top-2 · f = MAX(Landscape, Cultural, Activities)</div>
+<div style="overflow-x:auto">
+<table class="gtbl" style="white-space:nowrap">
+<tr><th>Round</th><th>Lista Landscape (s.a.)</th><th>Lista Cultural (s.a.)</th><th>Lista Activities (s.a.)</th><th>Nuovi score (r.a.)</th><th>Buffer top-2</th><th>Soglia T</th><th>Stop?</th></tr>
+<tr>
+  <td><b>1</b></td>
+  <td>A : 0.9</td><td>B : 0.9</td><td>F : 1.0</td>
+  <td>A→MAX(0.9,0.6,0.8)=<b>0.9</b><br>B→MAX(0.8,0.9,0.7)=<b>0.9</b><br>F→MAX(0.6,0.8,1.0)=<b>1.0</b></td>
+  <td><span style="color:var(--d-low)">F:1.0</span>, A:0.9</td>
+  <td>MAX(0.9,0.9,1.0)=<b>1.0</b></td>
+  <td>0.9 &lt; 1.0 ✗</td>
+</tr>
+<tr style="background:rgba(54,210,122,.07)">
+  <td><b>2</b></td>
+  <td>B : 0.8</td><td>D : 0.8</td><td>D : 0.9</td>
+  <td>D→MAX(0.7,0.8,0.9)=<b>0.9</b></td>
+  <td><span style="color:var(--d-low)">F:1.0</span>, <b style="color:var(--rank)">A:0.9</b></td>
+  <td>MAX(0.8,0.8,0.9)=<b>0.9</b></td>
+  <td style="color:var(--d-low);font-weight:700">0.9 ≥ 0.9 ✓ STOP</td>
+</tr>
+</table>
+</div>
+<div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft)">Top-2 =</span>
+  <span style="background:var(--rank);color:#fff;border-radius:5px;padding:3px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">F (1.0)</span>
+  <span style="background:var(--rank);color:#fff;border-radius:5px;padding:3px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">A (0.9)</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft)">· s.a. = 6 · r.a. = 6</span>
+</div>
+<p style="font-size:12px;color:var(--ink-soft);margin-top:6px">La soglia T scende da 1.0 a 0.9. Al round 2, il 2° nel buffer (A con 0.9) ≥ T=0.9 → nessun elemento non ancora visto può superare il 2° → STOP.</p>
 </div>
 <div class="gbox info"><div class="gbox-label">TA è instance-optimal</div>
 <p>Tra tutti gli algoritmi che usano sia s.a. che r.a., TA non fa mai più accessi del necessario (per istanza). In generale TA fa meno accessi di FA, ma non sempre.</p>
@@ -718,22 +863,51 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 </div></div>
 </div>`,
 
-`<div class="gbox ex"><div class="gbox-label">TDE Gennaio 2025 — Ticket JOIN Passenger</div>
-<p>Ticket: 300K tuple, 45K blocchi. val(RouteTo)=250.<br>
-Passenger: B+ primario su PassengerId, 3 livelli, 2500 foglie.</p>
-<p><b>Piano 1 — scan Ticket + lookup Passenger:</b><br>
-45K + (300K/250) × 3 = 45K + 1200×3 = <b>48.6K I/O</b></p>
-<p><b>Piano 2 — scan Passenger + scan Ticket:</b><br>
-2500 + (40K/500) × 45K = 2500 + 80×45K = <b>~3.6M I/O</b> ← molto peggio</p>
+`<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--phys);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">TDE Gennaio 2025 — Ticket JOIN Passenger</div>
+<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px">Ticket: 300K tuple · 45K blocchi · val(RouteTo)=250 &nbsp;|&nbsp; Passenger: B+ 3 livelli, 2500 foglie</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+  <div style="background:var(--bg);border:1.5px solid var(--d-low);border-radius:9px;padding:11px 14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--d-low);margin-bottom:6px">Piano 1 — scan Ticket → lookup Passenger (B+)</div>
+    <div style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--ink)">
+      b(Ticket) + (t(Ticket)/val(RouteTo)) × livelli B+<br>
+      = 45K + (300K/250) × 3<br>
+      = 45K + 1.200 × 3 = <b style="color:var(--d-low)">48.600 I/O</b>
+    </div>
+  </div>
+  <div style="background:var(--bg);border:1.5px solid var(--d-high);border-radius:9px;padding:11px 14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--d-high);margin-bottom:6px">Piano 2 — scan Passenger → scan Ticket per ognuno</div>
+    <div style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--ink)">
+      2500 + (40K/500) × 45K<br>
+      = 2.500 + 80 × 45K = <b style="color:var(--d-high)">~3.6M I/O ✗</b>
+    </div>
+  </div>
 </div>
-<div class="gbox ex"><div class="gbox-label">TDE Settembre 2025 — City JOIN Event con B+ su Date</div>
-<p>Event: 1M tuple, 5K blocchi. B+ su Date: 3 livelli, 1200 foglie. 1% eventi nel range = 10K.<br>
-val(Category)=25, val(CountryName)=100.</p>
-<p><b>Piano con B+ su Date:</b><br>
-2 nodi interni + 12 foglie + 10K accessi ai dati + 4×4 lookup City = <b>~10.030 I/O</b></p>
-<p><b>Piano scan Event (senza indice su Date):</b><br>
-5K + 4×4 = <b>5.016 I/O</b> ← più efficiente in questo caso!</p>
-<p style="color:var(--d-high);font-weight:600">Conclusione: l'indice non aiuta sempre. Confronta sempre i piani numericamente.</p>
+</div>
+
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--phys);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">TDE Settembre 2025 — City JOIN Event con B+ su Date</div>
+<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px">Event: 1M tuple · 5K blocchi · B+ su Date: 3 livelli, 1200 foglie · 1% nel range = 10K tuple</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+  <div style="background:var(--bg);border:1.5px solid var(--d-mid);border-radius:9px;padding:11px 14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--d-mid);margin-bottom:6px">Piano A — usa B+ su Date</div>
+    <div style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--ink)">
+      2 nodi interni + 12 foglie B+<br>
+      + 10K lookup dati + 4×4 lookup City<br>
+      = <b>~10.030 I/O</b>
+    </div>
+  </div>
+  <div style="background:var(--bg);border:1.5px solid var(--d-low);border-radius:9px;padding:11px 14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--d-low);margin-bottom:6px">Piano B — full scan Event (no indice su Date)</div>
+    <div style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--ink)">
+      5K (scan Event) + 4×4 (lookup City)<br>
+      = <b style="color:var(--d-low)">5.016 I/O ← più efficiente!</b>
+    </div>
+  </div>
+</div>
+<div style="margin-top:10px;background:rgba(255,90,90,.10);border:1px solid rgba(255,90,90,.3);border-radius:8px;padding:9px 13px;font-size:12.5px;color:var(--d-high);font-weight:600">
+  ⚠ L'indice non aiuta sempre: quando la selettività è bassa (1%), i 10K lookup ai dati costano più della scansione completa da 5K blocchi. Confronta sempre i piani con i numeri.
+</div>
 </div>`]
 },
 
@@ -803,10 +977,36 @@ val(Category)=25, val(CountryName)=100.</p>
 
 `<h3 class="gsub">Grafo di attivazione</h3>
 <p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Ogni nodo = un trigger. C'è un arco da T1 a T2 se l'azione di T1 può attivare T2. Se il grafo è <b>aciclico</b> → terminazione garantita. Se ci sono cicli → analizza se le condizioni WHEN li bloccano.</p>
-<div class="gbox ex"><div class="gbox-label">Esempio — TDE 2023</div>
-<p>T_total_salary (AFTER INSERT ON PERFORMANCE) → fa UPDATE su PERSON<br>
-T_richest (AFTER UPDATE OF total_salary ON PERSON) → fa UPDATE su RICHEST<br>
-<b>Grafo: T_total_salary → T_richest → (fine).</b> Aciclico → terminazione garantita.</p>
+<div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--trig);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Grafo di terminazione — TDE 2023</div>
+<div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;margin-bottom:12px">
+  <div style="background:var(--bg);border:1.5px solid var(--trig);border-radius:10px;padding:9px 14px;text-align:center;min-width:140px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--trig)">T_total_salary</div>
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:3px">AFTER INSERT ON PERFORMANCE</div>
+    <div style="font-size:11px;color:var(--ink-soft)">→ UPDATE su PERSON</div>
+  </div>
+  <div style="display:flex;align-items:center;padding:0 8px;color:var(--trig)">
+    <div style="height:2px;width:30px;background:var(--trig)"></div>
+    <div style="font-size:14px;color:var(--trig)">▶</div>
+  </div>
+  <div style="background:var(--bg);border:1.5px solid var(--trig);border-radius:10px;padding:9px 14px;text-align:center;min-width:130px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--trig)">T_richest</div>
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:3px">AFTER UPDATE OF total_salary</div>
+    <div style="font-size:11px;color:var(--ink-soft)">→ UPDATE su RICHEST</div>
+  </div>
+  <div style="display:flex;align-items:center;padding:0 8px;color:var(--ink-soft)">
+    <div style="height:2px;width:30px;background:var(--ink-soft);opacity:.4"></div>
+    <div style="font-size:14px;opacity:.4">▶</div>
+  </div>
+  <div style="background:var(--bg);border:1.5px dashed var(--line);border-radius:10px;padding:9px 14px;text-align:center;color:var(--ink-soft);font-size:12px;min-width:80px">
+    (fine)
+  </div>
+</div>
+<div style="background:rgba(47,211,152,.10);border:1px solid rgba(47,211,152,.35);border-radius:8px;padding:9px 13px;display:flex;align-items:center;gap:10px">
+  <span style="font-size:18px">✅</span>
+  <span style="font-size:13px;color:var(--trig);font-weight:600">Grafo aciclico → terminazione garantita</span>
+  <span style="font-size:12px;color:var(--ink-soft)">Nessun ciclo: T_richest non può riattivare T_total_salary.</span>
+</div>
 </div>
 <div class="gbox warn"><div class="gbox-label">Cicli pericolosi</div>
 <p>Se T1 aggiorna tabella A che attiva T2 che aggiorna tabella A che attiva T1 → ciclo infinito. Serve una condizione WHEN che lo interrompa (es. IF NEW.val &lt;&gt; OLD.val).</p>
