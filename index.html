@@ -391,6 +391,10 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
   <p>Cerca uno schedule seriale (T_a, T_b, T_c…) con gli stessi <b>reads-from</b> e le stesse <b>final write</b>. Se esiste → VSR. Reads-from: chi ha scritto x subito prima di ogni lettura. Final write: chi scrive x per ultimo.</p>
 </div></div>
 </div>
+<div class="gbox info"><div class="gbox-label">Intuizione — perché funziona la verifica VSR?</div>
+<p>Il risultato finale del DB dipende solo da due cose: <b>cosa ha letto ogni transazione</b> (reads-from) e <b>chi ha scritto l'ultimo valore</b> di ogni risorsa (final write). Tutto il resto (l'ordine interno di scritture intermedie) non conta perché nessun'altra transazione le ha lette. Quindi: se trovi uno schedule seriale con le stesse reads-from e final write → i due schedule producono esattamente gli stessi effetti sul DB → VSR.</p>
+<p style="margin-top:6px">Le <b>blind write</b> w_i(x) (T_i scrive x senza averla mai letta) sono "gratuite" da spostare: poiché nessuno ha letto il valore intermedio che sovrascrivono, spostarle non cambia nessuna reads-from.</p>
+</div>
 
 <div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0">
 <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em">ESEMPIO GUIDATO — ANALISI VSR</div>
@@ -443,6 +447,10 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
   <p>In Strict 2PL i lock vengono rilasciati <b>solo al commit/abort</b>. Questo elimina le dirty read. Se 2PL fallisce → Strict 2PL fallisce automaticamente.</p>
 </div></div>
 </div>
+<div class="gbox info"><div class="gbox-label">Intuizione — perché il 2PL garantisce la serializzabilità?</div>
+<p>La regola growing/shrinking crea un implicito <b>"punto di serializzazione"</b> per ogni transazione: il momento in cui rilascia il primo lock. Fino a quel punto T_i ha acquisito tutto quello che le serve (fase growing). Da quel momento in poi non può più cambiare idea (fase shrinking). Questo impone un ordine implicito: se T_j legge qualcosa che T_i ha scritto, T_j deve aspettare che T_i raggiunga il suo punto di serializzazione — il che crea un ordine seriale ben definito.</p>
+<p style="margin-top:6px"><b>Strict 2PL</b> va oltre: tenendo tutti i lock fino al commit, nessuna altra transazione può leggere valori "parziali" di T_i prima che T_i abbia finito (no dirty read).</p>
+</div>
 
 <div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0">
 <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em">ESEMPIO GUIDATO — VIOLAZIONE 2PL</div>
@@ -467,8 +475,22 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
   <strong>Compila la tabella RTM/WTM</strong>
-  <p>Inizia con RTM(x)=0 e WTM(x)=0 per tutte le risorse. Per <b>r_i(x)</b>: aggiorna RTM(x)=i(j) dove j è il WTM corrente. Per <b>w_i(x)</b>: controlla che i ≥ last WTM(x) e i ≥ RTM(x). Se no → T_i viene uccisa. Aggiorna WTM(x) aggiungendo i.</p>
+  <p>Inizia con RTM(x)=0 e WTM(x)=0 per tutte le risorse. Per ogni operazione:</p>
+  <ul style="margin:6px 0 6px 18px;font-size:13px;line-height:1.9;color:var(--ink-soft)">
+    <li><b style="color:var(--ink)">r_i(x)</b>: aggiorna RTM(x) = <b>i(j)</b> dove:
+      <ul style="margin:2px 0 2px 16px;list-style:disc">
+        <li><b>i</b> = timestamp di T_i (la transazione che sta leggendo)</li>
+        <li><b>j</b> = valore <em>attuale</em> di WTM(x) <b>in questo preciso momento</b> (quale versione T_i sta leggendo dal suo snapshot)</li>
+      </ul>
+    </li>
+    <li><b style="color:var(--ink)">w_i(x)</b>: T_i viene uccisa se ts(T_i) &lt; WTM(x) oppure ts(T_i) &lt; ts del reader in RTM(x). Se supera entrambi i controlli → WTM(x) = i.</li>
+  </ul>
 </div></div>
+</div>
+<div class="gbox warn" style="border-color:var(--conc)"><div class="gbox-label" style="background:var(--conc)">Dubbio frequente — perché r1(x) → RTM(x) = 1(0) e non 1(2)?</div>
+<p>Il numero <b>j</b> nella notazione <b>i(j)</b> è il <b>valore di WTM(x) al momento in cui T_i legge</b> — non il timestamp di un'altra transazione!</p>
+<p style="margin-top:8px">Esempio: se al passo 1 dello schedule WTM(x) è ancora 0 (nessuno ha ancora scritto x), allora r1(x) produce RTM(x) = <b>1(0)</b>: significa "T1 ha letto la versione 0 di x (quella iniziale)".</p>
+<p style="margin-top:8px">Diventerebbe <b>1(2)</b> solo se T2 avesse già scritto x <em>prima</em> di r1(x), cioè se WTM(x) fosse già 2 quando T1 legge. In quel caso T1 leggerebbe la versione scritta da T2, e RTM(x) = 1(2) direbbe "T1 ha letto la versione scritta da T2".</p>
 </div>
 <div class="gbox warn"><div class="gbox-label">Regola pratica per TS Multi</div>
 <p><b>w_i(x) viene uccisa se:</b> i &lt; ultimo WTM(x) (qualcuno ha scritto x dopo di te) oppure i &lt; RTM(x) (qualcuno ha letto x con timestamp più recente del tuo).</p>
