@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DB2 — Guida Ranking & Skyline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16110d;--bg2:#1f1812;--card:#241c15;--card2:#2c2219;--ink:#f5eee2;--soft:#a99c89;--line:#3a2e22;
+    --acc:#ff7a3d;--ok:#36d27a;--no:#ff5a5a;--warn:#ffc24b;--blue:#4f8cff;
+    --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Spline Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+  a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+  .layout{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh}
+  @media(max-width:720px){.layout{grid-template-columns:1fr}}
+  nav{background:var(--bg2);border-right:1px solid var(--line);padding:24px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  @media(max-width:720px){nav{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:16px 0}}
+  .nav-brand{padding:0 20px 20px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .nav-brand .back{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);display:flex;align-items:center;gap:6px}
+  .nav-brand .title{font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin-top:10px;color:var(--acc)}
+  nav ul{list-style:none;padding:0 10px}
+  nav ul li a{display:block;padding:7px 10px;border-radius:8px;font-size:13px;color:var(--soft);transition:background .15s,color .15s}
+  nav ul li a:hover{background:rgba(255,122,61,.12);color:var(--acc);text-decoration:none}
+  .nav-section{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--line);padding:14px 10px 4px;display:block}
+  .nav-links{padding:0 8px;margin-top:12px}
+  .nav-links a{display:block;font-size:12px;color:var(--soft);padding:4px 8px;border-radius:6px;transition:color .15s}
+  .nav-links a:hover{color:var(--ink);text-decoration:none}
+  main{padding:clamp(20px,4vw,56px);max-width:820px}
+  .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--soft);margin-bottom:8px}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(32px,6vw,50px);line-height:1;letter-spacing:-.02em;margin-bottom:14px;color:var(--acc)}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:26px;margin:48px 0 16px;color:var(--ink);scroll-margin-top:24px}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:28px 0 12px;color:var(--acc)}
+  p{margin-bottom:14px;font-size:15px}
+  ul,ol{padding-left:22px;margin-bottom:14px;font-size:15px}
+  li{margin-bottom:6px}
+  b{color:var(--ink);font-weight:700}
+  code{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--card2);padding:2px 6px;border-radius:5px;color:var(--warn)}
+  .box{border-radius:14px;padding:18px 20px;margin:16px 0}
+  .box.info{background:rgba(255,122,61,.08);border:1px solid rgba(255,122,61,.25)}
+  .box.example{background:rgba(47,211,152,.07);border:1px solid rgba(47,211,152,.25)}
+  .box.warn{background:rgba(255,194,75,.07);border:1px solid rgba(255,194,75,.25)}
+  .box.danger{background:rgba(255,90,90,.07);border:1px solid rgba(255,90,90,.25)}
+  .box.blue{background:rgba(79,140,255,.07);border:1px solid rgba(79,140,255,.25)}
+  .box-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+  .box.info .box-label{color:var(--acc)} .box.example .box-label{color:var(--ok)} .box.warn .box-label{color:var(--warn)} .box.danger .box-label{color:var(--no)} .box.blue .box-label{color:var(--blue)}
+  .steps{counter-reset:step;margin:18px 0}
+  .step{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
+  .step-num{counter-increment:step;background:var(--acc);color:#1a0800;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:15px;flex:none;margin-top:2px}
+  .step-num::before{content:counter(step)}
+  .step-body{flex:1}
+  .step-body strong{display:block;font-size:15px;margin-bottom:4px}
+  .step-body p{margin-bottom:0;font-size:14.5px;color:var(--soft)}
+  .step-body p b{color:var(--ink)}
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;font-family:'IBM Plex Mono',monospace}
+  .tbl th{background:var(--card2);padding:8px 12px;text-align:left;font-weight:600;color:var(--soft);border:1px solid var(--line)}
+  .tbl td{padding:8px 12px;border:1px solid var(--line);color:var(--ink)}
+  .tbl tr:nth-child(even) td{background:var(--bg2)}
+  .tbl .ok{color:var(--ok);font-weight:700} .tbl .no{color:var(--no);font-weight:700} .tbl .hl{color:var(--warn);font-weight:700}
+  .divider{border:none;border-top:1px solid var(--line);margin:40px 0}
+  footer{padding:30px 20px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="nav-brand">
+    <a class="back" href="guide.html">← Guide</a>
+    <div class="title">Ranking &amp; Skyline</div>
+  </div>
+  <ul>
+    <li><span class="nav-section">Skyline</span></li>
+    <li><a href="#intro">Introduzione</a></li>
+    <li><a href="#dominanza">1. Dominanza</a></li>
+    <li><a href="#sfs">2. Algoritmo SFS</a></li>
+    <li><a href="#skyband">3. k-skyband</a></li>
+    <li><a href="#topk-mono">4. Top-k e funzioni monotone</a></li>
+    <li><span class="nav-section">Algoritmi Top-k distribuiti</span></li>
+    <li><a href="#fa">5. Fagin's Algorithm (FA)</a></li>
+    <li><a href="#ta">6. Threshold Algorithm (TA)</a></li>
+    <li><a href="#nra">7. NRA</a></li>
+    <li><a href="#confronto">8. Confronto FA vs TA vs NRA</a></li>
+    <li><a href="#nonmonotone">9. Funzioni non monotone</a></li>
+    <li><span class="nav-section">Navigazione</span></li>
+  </ul>
+  <div class="nav-links">
+    <a href="guide_concurrency.html">← Concurrency</a>
+    <a href="index.html">Tracker TDE</a>
+    <a href="guide_physical.html">Physical DB →</a>
+  </div>
+</nav>
+
+<main>
+  <div class="kicker">Guida completa · DB2 Politecnico</div>
+  <h1>Ranking &amp; Skyline</h1>
+  <p style="font-size:16px;color:var(--soft)">Come trovare i migliori k elementi in dataset distribuiti, come calcolare lo skyline, e come usare FA, TA e NRA. Tutto spiegato da zero.</p>
+
+  <!-- INTRO -->
+  <h2 id="intro">Il problema: trovare i "migliori" elementi</h2>
+  <p>Immagina di cercare il miglior hotel per una vacanza. Vuoi che sia <b>vicino al mare</b> e che abbia un <b>prezzo basso</b>. Questi sono due attributi: distanza dal mare (più bassa = meglio) e prezzo (più basso = meglio).</p>
+  <p>Nei database distribuiti, questi attributi possono essere memorizzati su <b>server diversi</b> e già ordinati (uno per distanza, uno per prezzo). Il problema è trovare i migliori k elementi <b>senza recuperare tutto</b>.</p>
+
+  <hr class="divider">
+
+  <!-- DOMINANZA -->
+  <h2 id="dominanza">1. Dominanza</h2>
+  <p>Un elemento <b>a domina b</b> (scriviamo <code>a ≺ b</code>) se <b>a è almeno buono quanto b su tutti gli attributi</b> e <b>strettamente migliore su almeno uno</b>.</p>
+  <p>Importante: la "bontà" dipende dal contesto. Agli esami del Poli, i valori <b>più alti sono migliori</b> salvo diversa indicazione.</p>
+
+  <div class="box example">
+    <div class="box-label">Esempio concreto</div>
+    <p>Hotel A: distanza 0.3 km, prezzo 80€/notte<br>
+    Hotel B: distanza 0.5 km, prezzo 90€/notte</p>
+    <p><b>A domina B</b> perché è più vicino (0.3 &lt; 0.5) E più economico (80 &lt; 90). B è inutile se esiste A.</p>
+    <p>Hotel C: distanza 0.2 km, prezzo 120€/notte → <b>C NON domina A</b> (C è più vicino ma più caro). Né A domina C. Entrambi sono "potenzialmente ottimali".</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SFS -->
+  <h2 id="sfs">2. Algoritmo SFS — Sorted Filter Skyline</h2>
+  <p>SFS calcola lo skyline in modo efficiente ordinando prima i dati per un attributo e poi verificando la dominanza progressivamente.</p>
+
+  <h3>Passi di SFS</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Ordina il dataset per il primo attributo (poi il secondo come tiebreak, ecc.)</strong>
+      <p>Metti prima i "migliori" (quelli con valore più alto se higher-is-better, o più basso se lower-is-better).</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Il primo elemento entra sempre nello skyline</strong>
+      <p>Nessuno può dominarlo perché è il migliore sul primo attributo.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Per ogni elemento successivo nell'ordine: verificane la dominanza rispetto ai già in skyline</strong>
+      <p>Confronta l'elemento candidato con <b>tutti gli elementi già nello skyline</b>. Se nessuno lo domina → entra nello skyline. Se anche uno solo lo domina → viene scartato.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Continua fino alla fine del dataset</strong>
+      <p>Grazie all'ordinamento, un elemento con rank k sul primo attributo non può dominare elementi con rank &lt; k: questo permette a SFS di essere efficiente.</p>
+    </div></div>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio dai TDE — Esame Gennaio 2025 (Hotel)</div>
+    <p>Dataset ordinato per distanza train station (ts, lower-is-better), poi concert hall (ch):</p>
+    <table class="tbl">
+      <tr><th>Hotel</th><th>ts</th><th>ch</th><th>Skyline?</th><th>Dominato da</th></tr>
+      <tr><td>a</td><td>0.30</td><td>0.80</td><td class="ok">SÌ</td><td>—</td></tr>
+      <tr><td>d</td><td>0.40</td><td>0.90</td><td class="no">NO</td><td>a domina d (0.30&lt;0.40 e 0.80&lt;0.90)</td></tr>
+      <tr><td>h</td><td>0.50</td><td>0.70</td><td class="ok">SÌ</td><td>a /≺ h (h migliore su ch)</td></tr>
+      <tr><td>b</td><td>0.55</td><td>0.45</td><td class="ok">SÌ</td><td>a /≺ b, h /≺ b (b migliore su ch)</td></tr>
+      <tr><td>e</td><td>0.60</td><td>0.20</td><td class="ok">SÌ</td><td>nessuno domina e su entrambi</td></tr>
+      <tr><td>f</td><td>0.60</td><td>0.90</td><td class="no">NO</td><td>a domina f</td></tr>
+      <tr><td>c</td><td>0.70</td><td>0.30</td><td class="no">NO</td><td>e domina c (0.60&lt;0.70 e 0.20&lt;0.30)</td></tr>
+      <tr><td>i</td><td>0.80</td><td>0.10</td><td class="ok">SÌ</td><td>nessuno domina i su entrambi</td></tr>
+      <tr><td>g</td><td>0.90</td><td>0.15</td><td class="no">NO</td><td>i domina g</td></tr>
+    </table>
+    <p><b>Skyline = {a, h, b, e, i}</b></p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SKYBAND -->
+  <h2 id="skyband">3. k-Skyband</h2>
+  <p>Il <b>k-skyband</b> contiene tutti gli elementi dominati da <b>meno di k elementi</b>. Il 1-skyband è lo skyline normale. Il 2-skyband include lo skyline più gli elementi dominati da al più 1 elemento.</p>
+  <div class="box example">
+    <div class="box-label">Dall'esempio sopra — 2-skyband</div>
+    <p>Conto quanti elementi dello skyline dominano ciascun non-skyline:<br>
+    d: dominata da a (1 elemento) → entra nel 2-skyband<br>
+    f: dominata da a, h, b, e, i (5 elementi) → NON entra nel 2-skyband<br>
+    c: dominata da a, e (2 elementi) → NON entra nel 2-skyband<br>
+    g: dominata da a, h, b, e, i → NO<br>
+    <b>2-skyband = {a, h, b, e, i, d}</b></p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TOPK MONO -->
+  <h2 id="topk-mono">4. Top-k e funzioni monotone</h2>
+  <p>Una <b>funzione di scoring</b> assegna un punteggio a ogni elemento combinando i suoi attributi. La funzione è <b>monotona</b> se aumentare qualsiasi attributo non diminuisce mai il punteggio (es. f(x,y) = x + y, o min(x,y), o max(x,y)).</p>
+
+  <div class="box blue">
+    <div class="box-label">Teorema fondamentale</div>
+    <p><b>Lo skyline = insieme di tutti gli elementi che possono essere top-1 per qualche funzione monotona.</b><br>
+    Se un elemento non è nello skyline, non sarà mai top-1 con nessuna funzione monotona.</p>
+  </div>
+
+  <p>Se la funzione è una <b>combinazione lineare</b> (L1), solo gli elementi sul <b>guscio convesso</b> (convex hull) dello skyline possono essere top-1.</p>
+
+  <hr class="divider">
+
+  <!-- FA -->
+  <h2 id="fa">5. Fagin's Algorithm (FA)</h2>
+  <p>FA è usato quando i dati sono su più server, ognuno ordinato per un attributo diverso. Ogni server può rispondere a due tipi di query:</p>
+  <ul>
+    <li><b>Accesso ordinato (s.a.)</b>: "dammi il prossimo elemento nella tua lista" (leggo in ordine)</li>
+    <li><b>Accesso casuale (r.a.)</b>: "dammi il valore di x per l'elemento y" (leggo un elemento specifico)</li>
+  </ul>
+
+  <h3>Come funziona FA</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Fase di accesso ordinato: leggi tutti i server in parallelo, riga per riga</strong>
+      <p>Ad ogni round leggi un elemento da ogni lista. Segna tutti gli elementi visti finora. Continua finché hai trovato <b>k elementi presenti in tutte le liste</b> (gli "elementi comuni").</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Fase di accesso casuale: completa i punteggi degli elementi comuni</strong>
+      <p>Per ogni elemento comune, se non conosci il suo valore su qualche lista, fai un accesso casuale su quella lista. Ora hai il punteggio completo per tutti gli elementi comuni.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Restituisci i top-k tra gli elementi comuni</strong>
+      <p>Ordina per punteggio e prendi i migliori k.</p>
+    </div></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-label">Perché FA è corretto (con funzioni monotone)</div>
+    <p>Qualsiasi elemento NON ancora visto su tutte le liste ha uno score ≤ score del k-esimo elemento visto su ogni lista. Con una funzione monotona, non può battere gli elementi già trovati in tutte le liste.</p>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio dai TDE — Esame Febbraio 2025</div>
+    <p>Dataset su 3 liste A, B, C. Funzione f = 4A + 2B + C. Voglio top-2.</p>
+    <table class="tbl">
+      <tr><th>Lista A</th><th>Lista B</th><th>Lista C</th></tr>
+      <tr><td>1: 1.00</td><td>2: 0.80</td><td>2: 0.60</td></tr>
+      <tr><td>7: 0.80</td><td>1: 0.65</td><td>7: 0.60</td></tr>
+      <tr><td>2: 0.70</td><td>3: 0.55</td><td>3: 0.50</td></tr>
+      <tr><td>3: 0.20</td><td>4: 0.50</td><td>1: 0.15</td></tr>
+    </table>
+    <p><b>Round 1:</b> vedo 1 da A, 2 da B, 2 da C → nessun comune<br>
+    <b>Round 2:</b> vedo 7 da A, 1 da B, 7 da C → nessun comune<br>
+    <b>Round 3:</b> vedo 2 da A, 3 da B, 3 da C → ancora no<br>
+    <b>Round 4:</b> vedo 3 da A, 4 da B, 1 da C → elementi comuni in tutte le liste: 1, 2, 3. Ci sono 3 elementi comuni, ≥ k=2. <b>STOP.</b><br>
+    Accessi casuali: per 4 (in A e C), per 7 (in B). Calcolo i punteggi per tutti gli elementi visti e restituisco i 2 con score più alto: <b>top-2 = {1, 2}</b>.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TA -->
+  <h2 id="ta">6. Threshold Algorithm (TA)</h2>
+  <p>TA è più intelligente di FA: usa una <b>soglia (threshold)</b> per decidere quando fermarsi prima, senza dover aspettare k elementi comuni.</p>
+
+  <h3>Come funziona TA</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Ad ogni round: leggi un elemento da ogni lista (accesso ordinato)</strong>
+      <p>Per ogni nuovo elemento visto, fai subito accessi casuali sulle altre liste per calcolarne lo score completo.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Calcola la soglia T dopo ogni round</strong>
+      <p><b>T = f(ultimo_da_lista_1, ultimo_da_lista_2, ..., ultimo_da_lista_m)</b><br>
+      T è il punteggio massimo possibile per qualsiasi elemento non ancora visto: con una funzione monotona, nessun elemento non visto può avere score &gt; T.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Fermati quando il k-esimo score nel buffer ≥ T</strong>
+      <p>Il k-esimo elemento nel buffer ha score ≥ T → nessun elemento non ancora visto può essere nei top-k. Output: i k migliori nel buffer.</p>
+    </div></div>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio dai TDE — Esame Gennaio 2024 (funzione MAX)</div>
+    <p>Liste Landscape (L), Cultural (C), Activities (A). Funzione = MAX(L,C,A). Voglio top-2.</p>
+    <table class="tbl">
+      <tr><th>Round</th><th>Visto da L</th><th>Visto da C</th><th>Visto da A</th><th>Soglia T</th><th>Buffer top-2</th></tr>
+      <tr><td>1</td><td>A: 0.9</td><td>B: 0.9</td><td>F: 1.0</td><td>MAX(0.9,0.9,1.0)=<b>1.0</b></td><td>F(1.0), A(0.9)</td></tr>
+      <tr><td>2</td><td>B: 0.8</td><td>D: 0.8</td><td>D: 0.9</td><td>MAX(0.8,0.8,0.9)=<b>0.9</b></td><td>F(1.0), A(0.9)</td></tr>
+    </table>
+    <p>Dopo round 2: il 2° nel buffer è A con score 0.9. T = 0.9. Poiché 0.9 ≥ T = 0.9 → <b>STOP. Top-2 = {F, A}.</b><br>
+    Accessi ordinati: 6. Accessi casuali: quelli per completare i punteggi.</p>
+  </div>
+
+  <div class="box info">
+    <div class="box-label">TA vs FA: quando TA è più veloce</div>
+    <p>TA si ferma non appena la soglia è ≤ k-esimo score. FA invece deve aspettare k elementi comuni in tutte le liste. In generale TA fa meno accessi, ma non sempre: dipende dall'istanza.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- NRA -->
+  <h2 id="nra">7. NRA — No Random Access</h2>
+  <p>NRA è usato quando gli <b>accessi casuali non sono disponibili</b> (es. API che non permette query dirette). Usa solo accessi ordinati, ma deve stimare i punteggi con un intervallo [lb, ub].</p>
+
+  <h3>Come funziona NRA</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Ad ogni round leggi un elemento da ogni lista (solo s.a.)</strong>
+      <p>Per ogni nuovo elemento, conosci solo il valore sulle liste in cui lo hai già visto.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Per ogni elemento nel buffer, calcola lb e ub</strong>
+      <p><b>lb (lower bound):</b> calcola f usando i valori noti e 0 per quelli ignoti.<br>
+      <b>ub (upper bound):</b> calcola f usando i valori noti e il valore più alto ancora possibile (= l'ultimo valore visto su quella lista) per quelli ignoti.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Fermati quando lb del k-esimo ≥ ub di tutti gli altri (inclusi invisibili)</strong>
+      <p>Il criterio esatto: i top-k sono quelli con lb ≥ ub di ogni altro elemento. Quando ciò vale, nessun aggiornamento futuro può cambiarli.</p>
+    </div></div>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio dai TDE — Esame Febbraio 2025 (NRA)</div>
+    <p>f = 4A + 2B + C. Top-2. Liste A, B, C.</p>
+    <table class="tbl">
+      <tr><th>Round</th><th>Item</th><th>A</th><th>B</th><th>C</th><th>lb</th><th>ub</th></tr>
+      <tr><td>1</td><td>1</td><td>1.00</td><td>?</td><td>?</td><td>4.00</td><td>6.20</td></tr>
+      <tr><td>1</td><td>2</td><td>?</td><td>0.80</td><td>0.60</td><td>2.20</td><td>6.20</td></tr>
+      <tr><td>2</td><td>7</td><td>0.80</td><td>?</td><td>0.60</td><td>3.80</td><td>5.10</td></tr>
+      <tr><td>3</td><td>3</td><td>0.70</td><td>0.55</td><td>0.50</td><td>4.90</td><td>4.90</td></tr>
+    </table>
+    <p>NRA si ferma quando ha sicurezza sui top-2. I calcoli proseguono round dopo round aggiornando lb/ub man mano che si ottengono più valori.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CONFRONTO -->
+  <h2 id="confronto">8. Confronto FA vs TA vs NRA</h2>
+  <table class="tbl">
+    <tr><th>Algoritmo</th><th>Accessi ordinati</th><th>Accessi casuali</th><th>Quando si ferma</th><th>Corretto se</th></tr>
+    <tr><td><b>FA</b></td><td>Fino a k comuni</td><td>Sì (nella fase 2)</td><td>k elementi comuni</td><td>f monotona</td></tr>
+    <tr><td><b>TA</b></td><td>Dipende dalla soglia</td><td>Sì (ad ogni round)</td><td>k-esimo score ≥ soglia</td><td>f monotona</td></tr>
+    <tr><td><b>NRA</b></td><td>Dipende da lb/ub</td><td><b>No</b></td><td>lb k-esimo ≥ ub tutti</td><td>f monotona</td></tr>
+  </table>
+  <div class="box blue">
+    <div class="box-label">Ottimalità</div>
+    <p><b>TA è instance-optimal</b>: tra gli algoritmi che usano sia s.a. che r.a., non esiste algoritmo che faccia consistentemente meno accessi di TA su ogni istanza. NRA è instance-optimal tra gli algoritmi senza r.a.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- NON MONOTONE -->
+  <h2 id="nonmonotone">9. Funzioni non monotone — Quando FA e TA falliscono</h2>
+  <p>FA e TA assumono che la funzione di scoring sia <b>monotona</b>. Se non lo è, possono dare risultati <b>sbagliati</b>.</p>
+
+  <div class="box danger">
+    <div class="box-label">Esempio di funzione non monotona — Esame Giugno 2024</div>
+    <p>La funzione <code>f(x,y) = media(x,y) + std_dev(x,y)</code> NON è monotona: aumentare solo x potrebbe aumentare la std_dev ma diminuire la media, e il risultato complessivo può andare in entrambe le direzioni.</p>
+    <p>In quel TDE, TA ha trovato il punto C come top-1 (score 110), ma il vero top-1 erano A e B (score ≈ 116.57). <b>TA ha sbagliato</b> perché ha fermato la ricerca credendo nella soglia, ma la soglia era invalida per una funzione non monotona.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="box-label">Come riconoscere una funzione non monotona</div>
+    <p>Una funzione f(x1,…,xm) è monotona se: aumentare qualsiasi xi (tenendo fissi gli altri) non diminuisce mai il valore di f. Funzioni non monotone tipiche: deviazione standard, distanza dalla bisettrice, funzioni con "bilanciamento" tra attributi.</p>
+  </div>
+
+  <div class="box info" style="margin-top:32px">
+    <div class="box-label">Prossimi passi</div>
+    <p>Padroneggi ranking e skyline? Vai al <a href="quiz.html">Quiz Arcade</a> oppure continua con la guida su <a href="guide_physical.html">Physical Databases</a>.</p>
+  </div>
+
+  <footer>DB2 Politecnico · Guida Ranking &amp; Skyline</footer>
+</main>
+</div>
+</body>
+</html>

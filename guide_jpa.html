@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DB2 — Guida JPA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16110d;--bg2:#1f1812;--card:#241c15;--card2:#2c2219;--ink:#f5eee2;--soft:#a99c89;--line:#3a2e22;
+    --acc:#ffc24b;--ok:#36d27a;--no:#ff5a5a;--warn:#ffc24b;--blue:#4f8cff;--green:#2fd398;
+    --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Spline Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  .layout{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh}
+  @media(max-width:720px){.layout{grid-template-columns:1fr}}
+  nav{background:var(--bg2);border-right:1px solid var(--line);padding:24px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  @media(max-width:720px){nav{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:16px 0}}
+  .nav-brand{padding:0 20px 20px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .nav-brand .back{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);display:flex;align-items:center;gap:6px}
+  .nav-brand .title{font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin-top:10px;color:var(--acc)}
+  nav ul{list-style:none;padding:0 10px}
+  nav ul li a{display:block;padding:7px 10px;border-radius:8px;font-size:13px;color:var(--soft);transition:background .15s,color .15s}
+  nav ul li a:hover{background:rgba(255,194,75,.12);color:var(--acc);text-decoration:none}
+  .nav-section{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--line);padding:14px 10px 4px;display:block}
+  .nav-links{padding:0 8px;margin-top:12px}
+  .nav-links a{display:block;font-size:12px;color:var(--soft);padding:4px 8px;border-radius:6px;transition:color .15s}
+  .nav-links a:hover{color:var(--ink);text-decoration:none}
+  main{padding:clamp(20px,4vw,56px);max-width:820px}
+  .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--soft);margin-bottom:8px}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(32px,6vw,50px);line-height:1;letter-spacing:-.02em;margin-bottom:14px;color:var(--acc)}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:26px;margin:48px 0 16px;color:var(--ink);scroll-margin-top:24px}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:28px 0 12px;color:var(--acc)}
+  p{margin-bottom:14px;font-size:15px}
+  ul,ol{padding-left:22px;margin-bottom:14px;font-size:15px}
+  li{margin-bottom:6px}
+  b{color:var(--ink);font-weight:700}
+  code{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--card2);padding:2px 6px;border-radius:5px;color:var(--warn)}
+  pre{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink);line-height:1.7;overflow-x:auto;white-space:pre-wrap}
+  pre .ann{color:var(--acc);font-weight:700}
+  pre .kw{color:var(--blue);font-weight:700}
+  pre .cm{color:var(--soft);font-style:italic}
+  pre .str{color:var(--green)}
+  pre .type{color:#ff9d6e}
+  .box{border-radius:14px;padding:18px 20px;margin:16px 0}
+  .box.info{background:rgba(255,194,75,.08);border:1px solid rgba(255,194,75,.25)}
+  .box.example{background:rgba(47,211,152,.07);border:1px solid rgba(47,211,152,.25)}
+  .box.warn{background:rgba(255,194,75,.07);border:1px solid rgba(255,194,75,.3)}
+  .box.danger{background:rgba(255,90,90,.07);border:1px solid rgba(255,90,90,.25)}
+  .box.blue{background:rgba(79,140,255,.07);border:1px solid rgba(79,140,255,.25)}
+  .box-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+  .box.info .box-label{color:var(--acc)}.box.example .box-label{color:var(--ok)}.box.warn .box-label{color:var(--warn)}.box.danger .box-label{color:var(--no)}.box.blue .box-label{color:var(--blue)}
+  .steps{counter-reset:step;margin:18px 0}
+  .step{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
+  .step-num{counter-increment:step;background:var(--acc);color:#1a0e00;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:15px;flex:none;margin-top:2px}
+  .step-num::before{content:counter(step)}
+  .step-body{flex:1}.step-body strong{display:block;font-size:15px;margin-bottom:4px}
+  .step-body p{margin-bottom:0;font-size:14.5px;color:var(--soft)}.step-body p b{color:var(--ink)}
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;font-family:'IBM Plex Mono',monospace}
+  .tbl th{background:var(--card2);padding:8px 12px;text-align:left;font-weight:600;color:var(--soft);border:1px solid var(--line)}
+  .tbl td{padding:8px 12px;border:1px solid var(--line);color:var(--ink);font-size:13px}
+  .tbl tr:nth-child(even) td{background:var(--bg2)}
+  .tbl .ok{color:var(--ok);font-weight:700}.tbl .no{color:var(--no);font-weight:700}.tbl .hl{color:var(--warn);font-weight:700}
+  .divider{border:none;border-top:1px solid var(--line);margin:40px 0}
+  footer{padding:30px 20px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="nav-brand">
+    <a class="back" href="guide.html">← Guide</a>
+    <div class="title">JPA</div>
+  </div>
+  <ul>
+    <li><span class="nav-section">Fondamentali</span></li>
+    <li><a href="#intro">Cos'è JPA</a></li>
+    <li><a href="#entity">1. @Entity e @Id</a></li>
+    <li><a href="#relazioni">2. Tipi di relazione</a></li>
+    <li><a href="#owner">3. Owner side e mappedBy</a></li>
+    <li><a href="#joincol">4. @JoinColumn e @JoinTable</a></li>
+    <li><span class="nav-section">Strategia</span></li>
+    <li><a href="#fetch">5. LAZY vs EAGER</a></li>
+    <li><a href="#default-fetch">6. Default fetch types</a></li>
+    <li><a href="#cascade">7. Cascade</a></li>
+    <li><a href="#metodo">8. Metodo per l'esame</a></li>
+    <li><span class="nav-section">Esempi</span></li>
+    <li><a href="#ex-library">9. Esempio: Library</a></li>
+    <li><a href="#ex-movie">10. Esempio: Movie/Artist</a></li>
+    <li><span class="nav-section">Navigazione</span></li>
+  </ul>
+  <div class="nav-links">
+    <a href="guide_triggers.html">← Triggers</a>
+    <a href="index.html">Tracker TDE</a>
+    <a href="quiz.html">Quiz Arcade</a>
+  </div>
+</nav>
+
+<main>
+  <div class="kicker">Guida completa · DB2 Politecnico</div>
+  <h1>JPA — Java Persistence API</h1>
+  <p style="font-size:16px;color:var(--soft)">Come mappare un modello concettuale in entità JPA, scegliere le annotazioni giuste, decidere fetch type e cascade. Tutto con esempi reali dai TDE.</p>
+
+  <h2 id="intro">Cos'è JPA?</h2>
+  <p>JPA (Java Persistence API) è uno standard Java che permette di <b>mappare automaticamente</b> le classi Java sulle tabelle del database, senza scrivere query SQL a mano. Le classi Java diventano <b>entità</b>, i loro attributi diventano colonne, e le relazioni tra classi diventano foreign key (o tabelle di join).</p>
+  <p>Il <b>persistence context</b> è un'area di memoria gestita dall'EntityManager: tiene traccia di tutte le entità "gestite" (managed) nella sessione corrente. Se carichi la stessa riga due volte, ottieni la stessa istanza Java (identità garantita). Le modifiche alle entità managed vengono rilevate automaticamente (dirty checking) e scritte al commit.</p>
+
+  <hr class="divider">
+
+  <!-- ENTITY -->
+  <h2 id="entity">1. @Entity e @Id — Le basi</h2>
+
+  <pre><span class="ann">@Entity</span>  <span class="cm">// dice a JPA che questa classe è una tabella nel DB</span>
+<span class="kw">public class</span> <span class="type">Author</span> <span class="kw">implements</span> Serializable {
+
+  <span class="ann">@Id</span>  <span class="cm">// chiave primaria</span>
+  <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)  <span class="cm">// autoincrement</span>
+  <span class="kw">private int</span> id;
+
+  <span class="kw">private</span> String firstName;  <span class="cm">// colonna normale</span>
+  <span class="kw">private</span> String lastName;
+
+  <span class="ann">@Temporal</span>(TemporalType.DATE)  <span class="cm">// per campi data</span>
+  <span class="kw">private</span> Date birthDate;
+
+  <span class="ann">@Basic</span>(fetch = FetchType.LAZY)
+  <span class="ann">@Lob</span>  <span class="cm">// Large Object: per file grandi (foto, documenti)</span>
+  <span class="kw">private byte</span>[] photo;
+}</pre>
+
+  <div class="box info">
+    <div class="box-label">Regola</div>
+    <p>Ogni entità JPA deve avere:<br>
+    1. <code>@Entity</code> sulla classe<br>
+    2. <code>@Id</code> su un campo (la chiave primaria)<br>
+    3. Implementare <code>Serializable</code> (buona pratica)<br>
+    4. Un costruttore senza argomenti (anche se non scritto, Java lo genera)</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- RELAZIONI -->
+  <h2 id="relazioni">2. Tipi di relazione</h2>
+  <p>Le relazioni tra entità rispecchiano le cardinalità del modello ER:</p>
+
+  <table class="tbl">
+    <tr><th>Annotazione</th><th>Cardinalità</th><th>Esempio</th></tr>
+    <tr><td><code>@OneToOne</code></td><td>1:1</td><td>Persona ↔ Passaporto</td></tr>
+    <tr><td><code>@ManyToOne</code></td><td>N:1</td><td>Libro → Autore (molti libri, un autore)</td></tr>
+    <tr><td><code>@OneToMany</code></td><td>1:N</td><td>Autore → Lista&lt;Libro&gt;</td></tr>
+    <tr><td><code>@ManyToMany</code></td><td>N:M</td><td>Studente ↔ Corso</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-label">Come scegliere l'annotazione giusta</div>
+    <p>Leggila dal lato dell'entità corrente:<br>
+    "Un Autore può avere <b>molti</b> Libri" → nella classe Author: <code>@OneToMany</code> su <code>List&lt;Book&gt;</code><br>
+    "Un Libro ha <b>uno</b> Autore" → nella classe Book: <code>@ManyToOne</code> su <code>Author</code></p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- OWNER -->
+  <h2 id="owner">3. Owner side e mappedBy — La parte più difficile</h2>
+  <p>In JPA, per ogni relazione bidirezionale, uno dei due lati è il <b>proprietario (owner)</b> della relazione. L'owner è il lato che "controlla" la foreign key nel database (cioè il lato che ha la colonna FK o la tabella di join).</p>
+
+  <p><b>Il lato non-owner</b> deve specificare <code>mappedBy = "nomeAttributo"</code> dove <code>nomeAttributo</code> è il nome dell'attributo nell'entità owner che punta a questa relazione.</p>
+
+  <div class="box example">
+    <div class="box-label">Esempio: Libro - Autore (Many-to-One)</div>
+    <p>La tabella Book ha la colonna FK <code>author_id</code>. Quindi Book è l'<b>owner</b> della relazione.</p>
+
+<pre><span class="cm">// Book è l'OWNER: ha la foreign key</span>
+<span class="ann">@Entity</span>
+<span class="kw">public class</span> <span class="type">Book</span> {
+  <span class="ann">@ManyToOne</span>
+  <span class="ann">@JoinColumn</span>(name = <span class="str">"author_id"</span>)  <span class="cm">// nome della FK nel DB</span>
+  <span class="kw">private</span> <span class="type">Author</span> author;  <span class="cm">// owner</span>
+}
+
+<span class="cm">// Author è il lato NON-owner: usa mappedBy</span>
+<span class="ann">@Entity</span>
+<span class="kw">public class</span> <span class="type">Author</span> {
+  <span class="ann">@OneToMany</span>(mappedBy = <span class="str">"author"</span>)  <span class="cm">// "author" = nome campo in Book</span>
+  <span class="kw">private</span> List&lt;<span class="type">Book</span>&gt; books;
+}</pre>
+  </div>
+
+  <div class="box blue">
+    <div class="box-label">Regola pratica per scegliere l'owner</div>
+    <ul>
+      <li><b>@ManyToOne</b>: sempre l'owner è il lato "Many" (ha la FK)</li>
+      <li><b>@ManyToMany</b>: puoi scegliere qualsiasi lato come owner, preferisci il lato più acceduto o quello che rappresenta l'associazione</li>
+      <li><b>@OneToOne</b>: l'owner è il lato che ha la FK (spesso quello con la dipendenza funzionale)</li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <!-- JOINCOL -->
+  <h2 id="joincol">4. @JoinColumn e @JoinTable</h2>
+
+  <p><code>@JoinColumn</code> specifica il nome della colonna FK nel database. Va sul lato owner.</p>
+
+  <pre><span class="ann">@ManyToOne</span>
+<span class="ann">@JoinColumn</span>(name = <span class="str">"director_id"</span>)  <span class="cm">// nome colonna FK nel DB</span>
+<span class="kw">private</span> <span class="type">Artist</span> director;</pre>
+
+  <p><code>@JoinTable</code> si usa per le relazioni <b>@ManyToMany</b>: specifica la tabella di join intermedia e le sue colonne.</p>
+
+  <pre><span class="ann">@ManyToMany</span>
+<span class="ann">@JoinTable</span>(
+  name = <span class="str">"actor_movie"</span>,              <span class="cm">// nome tabella di join</span>
+  joinColumns = {@<span class="ann">JoinColumn</span>(name = <span class="str">"movie_id"</span>)},         <span class="cm">// FK verso questa entità</span>
+  inverseJoinColumns = {@<span class="ann">JoinColumn</span>(name = <span class="str">"artist_id"</span>)}  <span class="cm">// FK verso l'altra</span>
+)
+<span class="kw">private</span> List&lt;<span class="type">Artist</span>&gt; actors;</pre>
+
+  <hr class="divider">
+
+  <!-- FETCH -->
+  <h2 id="fetch">5. LAZY vs EAGER — Come vengono caricati i dati</h2>
+
+  <table class="tbl">
+    <tr><th>Fetch Type</th><th>Quando vengono caricati i dati collegati</th><th>Pro</th><th>Contro</th></tr>
+    <tr><td><b>EAGER</b></td><td>Subito, insieme all'entità principale</td><td>Dati sempre disponibili</td><td>Carica dati forse non necessari (inefficiente con tanti dati)</td></tr>
+    <tr><td><b>LAZY</b></td><td>Solo al primo accesso (on demand)</td><td>Efficiente: carica solo quello che serve</td><td>Richiede sessione aperta al momento dell'accesso</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-label">LazyInitializationException — L'errore più comune in JPA</div>
+    <p>Se hai una relazione LAZY e provi ad accedervi dopo che la sessione è chiusa, ottieni <code>LazyInitializationException</code>. Soluzione: mantieni la sessione aperta, oppure usa EAGER per quelle relazioni critiche.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- DEFAULT FETCH -->
+  <h2 id="default-fetch">6. Default fetch types — Cosa usa JPA se non specifichi</h2>
+
+  <table class="tbl">
+    <tr><th>Annotazione</th><th>Default fetch</th><th>Motivazione</th></tr>
+    <tr><td><code>@OneToOne</code></td><td class="hl">EAGER</td><td>Di solito è un singolo oggetto, pochi dati</td></tr>
+    <tr><td><code>@ManyToOne</code></td><td class="hl">EAGER</td><td>Come sopra: un singolo oggetto padre</td></tr>
+    <tr><td><code>@OneToMany</code></td><td class="ok">LAZY</td><td>Potenzialmente molti elementi: meglio caricare su richiesta</td></tr>
+    <tr><td><code>@ManyToMany</code></td><td class="ok">LAZY</td><td>Come sopra</td></tr>
+  </table>
+
+  <div class="box info">
+    <div class="box-label">Regola per l'esame: decidi in base alla cardinalità e all'uso</div>
+    <ul>
+      <li>Se la collezione ha <b>pochi elementi</b> (es. premi di un artista → ordini di grandezza: decine) → EAGER va bene</li>
+      <li>Se la collezione ha <b>molti elementi</b> (es. tutti i reader di un libro → milioni) → LAZY obbligatorio</li>
+      <li>Se l'applicazione <b>accede sempre</b> quella relazione nella stessa request → EAGER è più efficiente</li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CASCADE -->
+  <h2 id="cascade">7. Cascade — Propagare le operazioni</h2>
+  <p>Cascade dice a JPA di <b>propagare automaticamente</b> le operazioni JPA (persist, remove, merge, refresh) dall'entità padre ai figli.</p>
+
+  <table class="tbl">
+    <tr><th>CascadeType</th><th>Cosa propaga</th><th>Uso tipico</th></tr>
+    <tr><td><code>PERSIST</code></td><td>EntityManager.persist()</td><td>Salva automaticamente le entità figlio quando salvi il padre</td></tr>
+    <tr><td><code>REMOVE</code></td><td>EntityManager.remove()</td><td>Cancella i figli quando cancelli il padre (attenzione: pericoloso)</td></tr>
+    <tr><td><code>MERGE</code></td><td>EntityManager.merge()</td><td>Aggiorna i figli quando aggiorni il padre</td></tr>
+    <tr><td><code>REFRESH</code></td><td>EntityManager.refresh()</td><td>Ricarica i figli dal DB quando ricarichi il padre</td></tr>
+    <tr><td><code>ALL</code></td><td>Tutte le operazioni</td><td>Usa con cautela: propaga tutto</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-label">Quando NON usare CASCADE.REMOVE</div>
+    <p>Se l'entità figlia può esistere indipendentemente dal padre (es. un Libro esiste anche senza Author), non usare REMOVE. Lo usi solo se il figlio non ha senso senza il padre (es. righe di un ordine d'acquisto).</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- METODO -->
+  <h2 id="metodo">8. Metodo passo-passo per l'esame JPA</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Leggi il diagramma ER e individua le entità e le relazioni</strong>
+      <p>Ogni rettangolo del diagramma = una classe Java con @Entity. Ogni rombo = una relazione (OneToMany, ManyToMany, etc.).</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Determina la cardinalità di ogni relazione</strong>
+      <p>1:1, 1:N, N:M? Questo ti dice quale annotazione usare.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Identifica quali direzioni della relazione servono all'applicazione</strong>
+      <p>L'applicazione mostra "per un autore, i suoi libri"? → Servono Book nella classe Author. "Per un libro, il suo autore"? → Serve Author nella classe Book. Se serve solo una direzione, non è necessario il lato inverso (unidirezionale).</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Scegli l'owner e metti mappedBy sul lato non-owner</strong>
+      <p>Per ManyToOne: sempre Many è owner. Per ManyToMany: scegli il lato "più naturale" (spesso quello che ha la joinTable nel DB).</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Scegli il fetch type in base a cardinalità e frequenza di accesso</strong>
+      <p>Molti elementi → LAZY. Pochi sempre necessari → EAGER. Guarda le cardinalità dell'applicazione (migliaia? milioni?).</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Decidi se serve @OrderBy per le liste ordinate</strong>
+      <p>Se l'applicazione mostra elementi "in ordine decrescente di data" → aggiungi @OrderBy("date DESC").</p>
+    </div></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- EXAMPLE LIBRARY -->
+  <h2 id="ex-library">9. Esempio completo — Digital Library (TDE Settembre 2025)</h2>
+  <p>Schema: Book, Author, Reader, Country. L'applicazione mostra autori con i loro libri, e per ogni libro tutti i reader. Reader: milioni, Book: decine di migliaia, Author: migliaia, Country: decine.</p>
+
+  <pre><span class="ann">@Entity</span>
+<span class="kw">public class</span> <span class="type">Author</span> <span class="kw">implements</span> Serializable {
+  <span class="ann">@Id</span> <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+  <span class="kw">private int</span> id;
+  <span class="kw">private</span> String name;
+  <span class="kw">private</span> String surname;
+
+  <span class="cm">// Country → Author: ManyToOne (molti autori per paese)</span>
+  <span class="ann">@ManyToOne</span>(fetch = FetchType.LAZY)  <span class="cm">// LAZY: non sempre serve il paese</span>
+  <span class="ann">@JoinColumn</span>(name = <span class="str">"country_id"</span>)
+  <span class="kw">private</span> <span class="type">Country</span> country;  <span class="cm">// owner</span>
+
+  <span class="cm">// Author → Books: OneToMany. App: "per un autore, i suoi libri"</span>
+  <span class="ann">@OneToMany</span>(mappedBy = <span class="str">"author"</span>, fetch = FetchType.LAZY)
+  <span class="cm">// LAZY: decine di migliaia di libri totali, su richiesta</span>
+  <span class="kw">private</span> List&lt;<span class="type">Book</span>&gt; books;
+}</pre>
+
+  <pre><span class="ann">@Entity</span>
+<span class="kw">public class</span> <span class="type">Book</span> <span class="kw">implements</span> Serializable {
+  <span class="ann">@Id</span> <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+  <span class="kw">private int</span> id;
+  <span class="kw">private</span> String title;
+
+  <span class="cm">// Book → Author: ManyToOne (owner: Book ha la FK)</span>
+  <span class="ann">@ManyToOne</span>(fetch = FetchType.EAGER)  <span class="cm">// EAGER: l'autore è sempre mostrato con il libro</span>
+  <span class="ann">@JoinColumn</span>(name = <span class="str">"author_id"</span>)
+  <span class="kw">private</span> <span class="type">Author</span> author;
+
+  <span class="cm">// Book → Readers: ManyToMany. App: "per ogni libro, i suoi reader"</span>
+  <span class="ann">@ManyToMany</span>(mappedBy = <span class="str">"readBooks"</span>, fetch = FetchType.LAZY)
+  <span class="cm">// LAZY: milioni di reader, mai caricare tutto insieme</span>
+  <span class="kw">private</span> List&lt;<span class="type">Reader</span>&gt; readers;
+}</pre>
+
+  <pre><span class="ann">@Entity</span>
+<span class="kw">public class</span> <span class="type">Reader</span> <span class="kw">implements</span> Serializable {
+  <span class="ann">@Id</span> <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+  <span class="kw">private int</span> id;
+  <span class="kw">private</span> String name;
+
+  <span class="cm">// Reader → Books letti: ManyToMany (Reader è owner: ha la JoinTable)</span>
+  <span class="ann">@ManyToMany</span>
+  <span class="ann">@JoinTable</span>(name = <span class="str">"reader_book"</span>,
+    joinColumns = {@<span class="ann">JoinColumn</span>(name = <span class="str">"reader_id"</span>)},
+    inverseJoinColumns = {@<span class="ann">JoinColumn</span>(name = <span class="str">"book_id"</span>)})
+  <span class="kw">private</span> List&lt;<span class="type">Book</span>&gt; readBooks;  <span class="cm">// owner</span>
+}</pre>
+
+  <hr class="divider">
+
+  <!-- EXAMPLE MOVIE -->
+  <h2 id="ex-movie">10. Esempio — Movie/Artist (TDE Luglio 2023)</h2>
+  <p>Artist può dirigere film (1:N, Artist è il direttore) e recitare in film (N:M). Ha premi (N:M). L'app mostra i film diretti e recitati di un artista, in ordine cronologico decrescente.</p>
+
+  <pre><span class="ann">@Entity</span>
+<span class="kw">public class</span> <span class="type">Artist</span> <span class="kw">implements</span> Serializable {
+  <span class="ann">@Id</span> <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+  <span class="kw">private int</span> id;
+  <span class="kw">private</span> String firstname, lastname, role;
+
+  <span class="ann">@Basic</span>(fetch = FetchType.LAZY)
+  <span class="ann">@Lob</span>
+  <span class="kw">private byte</span>[] photo;  <span class="cm">// LAZY: le foto sono grandi, caricare solo se serve</span>
+
+  <span class="cm">// Film diretti da questo artista</span>
+  <span class="ann">@OneToMany</span>(mappedBy = <span class="str">"director"</span>, fetch = FetchType.EAGER)
+  <span class="ann">@OrderBy</span>(<span class="str">"issuedate DESC"</span>)
+  <span class="cm">// EAGER: pochi film per regista (curriculum breve), sempre mostrati</span>
+  <span class="kw">private</span> List&lt;<span class="type">Movie</span>&gt; directedMovies;
+
+  <span class="cm">// Film in cui recita (come attore)</span>
+  <span class="ann">@ManyToMany</span>(mappedBy = <span class="str">"actors"</span>, fetch = FetchType.EAGER)
+  <span class="ann">@OrderBy</span>(<span class="str">"issuedate DESC"</span>)
+  <span class="cm">// EAGER: pochi film nel curriculum di un attore</span>
+  <span class="kw">private</span> List&lt;<span class="type">Movie</span>&gt; actedMovies;
+
+  <span class="cm">// Premi vinti</span>
+  <span class="ann">@ManyToMany</span>(mappedBy = <span class="str">"artists"</span>, fetch = FetchType.EAGER)
+  <span class="cm">// EAGER: pochi premi per artista (ordini di grandezza: decine)</span>
+  <span class="kw">private</span> List&lt;<span class="type">Award</span>&gt; awards;
+}
+
+<span class="ann">@Entity</span>
+<span class="kw">public class</span> <span class="type">Movie</span> <span class="kw">implements</span> Serializable {
+  <span class="ann">@Id</span> <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+  <span class="kw">private int</span> id;
+  <span class="kw">private</span> String title, genre;
+  <span class="kw">private int</span> revenues;
+  <span class="ann">@Temporal</span>(TemporalType.DATE)
+  <span class="kw">private</span> Date issuedate;
+
+  <span class="cm">// Il regista del film — ManyToOne, Movie è owner</span>
+  <span class="ann">@ManyToOne</span>
+  <span class="ann">@JoinColumn</span>(name = <span class="str">"director_id"</span>)
+  <span class="kw">private</span> <span class="type">Artist</span> director;  <span class="cm">// owner</span>
+
+  <span class="cm">// Attori del film — ManyToMany, Movie è owner</span>
+  <span class="ann">@ManyToMany</span>
+  <span class="ann">@JoinTable</span>(name = <span class="str">"actor_movie"</span>,
+    joinColumns = {@<span class="ann">JoinColumn</span>(name = <span class="str">"movie_id"</span>)},
+    inverseJoinColumns = {@<span class="ann">JoinColumn</span>(name = <span class="str">"actor_id"</span>)})
+  <span class="kw">private</span> List&lt;<span class="type">Artist</span>&gt; actors;  <span class="cm">// owner</span>
+}</pre>
+
+  <div class="box example">
+    <div class="box-label">Motivazioni dei fetch type</div>
+    <ul>
+      <li><b>directedMovies EAGER:</b> un regista dirige pochi film (decine al massimo), e l'app li mostra sempre nella pagina dell'artista → vale la pena caricarli subito.</li>
+      <li><b>actedMovies EAGER:</b> stessa logica — un attore recita in pochi film nel suo curriculum.</li>
+      <li><b>photo LAZY:</b> le foto sono oggetti grandi. Caricarle ogni volta che si carica un Artist appesantirebbe tutte le query. Si caricano solo quando l'utente vede la pagina del singolo artista.</li>
+    </ul>
+  </div>
+
+  <div class="box info" style="margin-top:32px">
+    <div class="box-label">Prossimi passi</div>
+    <p>Vuoi testare la tua conoscenza di JPA? Vai al <a href="quiz.html">Quiz Arcade</a> oppure torna all'<a href="index.html">indice dei TDE</a>.</p>
+  </div>
+
+  <footer>DB2 Politecnico · Guida JPA</footer>
+</main>
+</div>
+</body>
+</html>

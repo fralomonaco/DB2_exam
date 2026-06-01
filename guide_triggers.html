@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DB2 — Guida Triggers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16110d;--bg2:#1f1812;--card:#241c15;--card2:#2c2219;--ink:#f5eee2;--soft:#a99c89;--line:#3a2e22;
+    --acc:#2fd398;--ok:#36d27a;--no:#ff5a5a;--warn:#ffc24b;--blue:#4f8cff;
+    --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Spline Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+  a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+  .layout{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh}
+  @media(max-width:720px){.layout{grid-template-columns:1fr}}
+  nav{background:var(--bg2);border-right:1px solid var(--line);padding:24px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  @media(max-width:720px){nav{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:16px 0}}
+  .nav-brand{padding:0 20px 20px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .nav-brand .back{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);display:flex;align-items:center;gap:6px}
+  .nav-brand .title{font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin-top:10px;color:var(--acc)}
+  nav ul{list-style:none;padding:0 10px}
+  nav ul li a{display:block;padding:7px 10px;border-radius:8px;font-size:13px;color:var(--soft);transition:background .15s,color .15s}
+  nav ul li a:hover{background:rgba(47,211,152,.12);color:var(--acc);text-decoration:none}
+  .nav-section{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--line);padding:14px 10px 4px;display:block}
+  .nav-links{padding:0 8px;margin-top:12px}
+  .nav-links a{display:block;font-size:12px;color:var(--soft);padding:4px 8px;border-radius:6px;transition:color .15s}
+  .nav-links a:hover{color:var(--ink);text-decoration:none}
+  main{padding:clamp(20px,4vw,56px);max-width:820px}
+  .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--soft);margin-bottom:8px}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(32px,6vw,50px);line-height:1;letter-spacing:-.02em;margin-bottom:14px;color:var(--acc)}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:26px;margin:48px 0 16px;color:var(--ink);scroll-margin-top:24px}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:28px 0 12px;color:var(--acc)}
+  p{margin-bottom:14px;font-size:15px}
+  ul,ol{padding-left:22px;margin-bottom:14px;font-size:15px}
+  li{margin-bottom:6px}
+  b{color:var(--ink);font-weight:700}
+  code{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--card2);padding:2px 6px;border-radius:5px;color:var(--warn)}
+  pre{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);line-height:1.7;overflow-x:auto;white-space:pre-wrap}
+  pre .kw{color:var(--blue);font-weight:700}
+  pre .cm{color:var(--soft);font-style:italic}
+  pre .str{color:var(--ok)}
+  pre .hl{color:var(--warn)}
+  .box{border-radius:14px;padding:18px 20px;margin:16px 0}
+  .box.info{background:rgba(47,211,152,.08);border:1px solid rgba(47,211,152,.25)}
+  .box.example{background:rgba(47,211,152,.07);border:1px solid rgba(47,211,152,.25)}
+  .box.warn{background:rgba(255,194,75,.07);border:1px solid rgba(255,194,75,.25)}
+  .box.danger{background:rgba(255,90,90,.07);border:1px solid rgba(255,90,90,.25)}
+  .box.blue{background:rgba(79,140,255,.07);border:1px solid rgba(79,140,255,.25)}
+  .box-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+  .box.info .box-label,.box.example .box-label{color:var(--ok)}.box.warn .box-label{color:var(--warn)}.box.danger .box-label{color:var(--no)}.box.blue .box-label{color:var(--blue)}
+  .steps{counter-reset:step;margin:18px 0}
+  .step{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
+  .step-num{counter-increment:step;background:var(--acc);color:#001a0e;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:15px;flex:none;margin-top:2px}
+  .step-num::before{content:counter(step)}
+  .step-body{flex:1}.step-body strong{display:block;font-size:15px;margin-bottom:4px}
+  .step-body p{margin-bottom:0;font-size:14.5px;color:var(--soft)}.step-body p b{color:var(--ink)}
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;font-family:'IBM Plex Mono',monospace}
+  .tbl th{background:var(--card2);padding:8px 12px;text-align:left;font-weight:600;color:var(--soft);border:1px solid var(--line)}
+  .tbl td{padding:8px 12px;border:1px solid var(--line);color:var(--ink)}
+  .tbl tr:nth-child(even) td{background:var(--bg2)}
+  .tbl .ok{color:var(--ok);font-weight:700}.tbl .no{color:var(--no);font-weight:700}.tbl .hl{color:var(--warn);font-weight:700}
+  .divider{border:none;border-top:1px solid var(--line);margin:40px 0}
+  footer{padding:30px 20px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="nav-brand">
+    <a class="back" href="guide.html">← Guide</a>
+    <div class="title">Triggers</div>
+  </div>
+  <ul>
+    <li><span class="nav-section">Basi</span></li>
+    <li><a href="#intro">Cos'è un trigger</a></li>
+    <li><a href="#sintassi">1. Sintassi completa</a></li>
+    <li><a href="#timing">2. BEFORE vs AFTER</a></li>
+    <li><a href="#granularity">3. ROW vs STATEMENT</a></li>
+    <li><a href="#oldnew">4. OLD e NEW</a></li>
+    <li><span class="nav-section">Progettazione</span></li>
+    <li><a href="#quando">5. Quando creare un trigger</a></li>
+    <li><a href="#metodo">6. Metodo passo-passo</a></li>
+    <li><a href="#terminazione">7. Terminazione</a></li>
+    <li><span class="nav-section">Esempi dai TDE</span></li>
+    <li><a href="#ex-budget">8. Budget progetto</a></li>
+    <li><a href="#ex-richest">9. Richest performer</a></li>
+    <li><a href="#ex-topk">10. Top-5 versatile</a></li>
+    <li><span class="nav-section">Navigazione</span></li>
+  </ul>
+  <div class="nav-links">
+    <a href="guide_physical.html">← Physical DB</a>
+    <a href="index.html">Tracker TDE</a>
+    <a href="guide_jpa.html">JPA →</a>
+  </div>
+</nav>
+
+<main>
+  <div class="kicker">Guida completa · DB2 Politecnico</div>
+  <h1>Triggers</h1>
+  <p style="font-size:16px;color:var(--soft)">Come progettare trigger SQL da zero: sintassi, timing, granularità, e come risolvere gli esercizi tipici del Politecnico con esempi reali.</p>
+
+  <h2 id="intro">Cos'è un trigger?</h2>
+  <p>Un <b>trigger</b> è una procedura che il database esegue <b>automaticamente</b> in risposta a un evento (INSERT, UPDATE, DELETE) su una tabella. È come un "riflesso condizionato" del database: quando succede X, fai Y.</p>
+  <p>Esempio pratico: ogni volta che viene inserito un nuovo ordine in un e-commerce, aggiorna automaticamente le scorte di magazzino. Senza trigger, dovresti farlo manualmente nel codice applicativo — con il rischio di dimenticartelo.</p>
+
+  <hr class="divider">
+
+  <!-- SINTASSI -->
+  <h2 id="sintassi">1. Sintassi completa di un trigger</h2>
+
+  <pre><span class="kw">CREATE TRIGGER</span> nome_trigger
+<span class="hl">AFTER</span> | BEFORE  <span class="cm">-- quando si attiva</span>
+<span class="kw">INSERT</span> | <span class="kw">UPDATE</span> [<span class="kw">OF</span> colonna] | <span class="kw">DELETE</span>  <span class="cm">-- quale evento</span>
+<span class="kw">ON</span> nome_tabella  <span class="cm">-- su quale tabella</span>
+[<span class="kw">REFERENCING</span> <span class="kw">NEW</span> <span class="kw">AS</span> new_row <span class="kw">OLD</span> <span class="kw">AS</span> old_row]
+[<span class="kw">FOR EACH ROW</span> | <span class="kw">FOR EACH STATEMENT</span>]  <span class="cm">-- granularità</span>
+[<span class="kw">WHEN</span> (condizione)]  <span class="cm">-- condizione opzionale</span>
+<span class="kw">BEGIN</span>
+  <span class="cm">-- corpo del trigger</span>
+<span class="kw">END</span>;</pre>
+
+  <hr class="divider">
+
+  <!-- TIMING -->
+  <h2 id="timing">2. BEFORE vs AFTER</h2>
+  <table class="tbl">
+    <tr><th>Timing</th><th>Quando si attiva</th><th>Può modificare NEW?</th><th>Uso tipico</th></tr>
+    <tr><td><b>BEFORE</b></td><td>Prima che la modifica venga applicata al DB</td><td class="ok">SÌ</td><td>Validazione, correzione valori, blocco operazione con RAISE EXCEPTION</td></tr>
+    <tr><td><b>AFTER</b></td><td>Dopo che la modifica è già nel DB</td><td class="no">NO</td><td>Propagazione effetti, aggiornamento tabelle correlate, log</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-label">Regola pratica</div>
+    <p>Usa <b>BEFORE</b> se devi bloccare/modificare l'operazione. Usa <b>AFTER</b> se devi aggiornare altre tabelle in conseguenza. All'esame quasi sempre si usa AFTER.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GRANULARITY -->
+  <h2 id="granularity">3. FOR EACH ROW vs FOR EACH STATEMENT</h2>
+  <table class="tbl">
+    <tr><th>Granularità</th><th>Eseguito</th><th>Accesso a OLD/NEW</th><th>Uso tipico</th></tr>
+    <tr><td><b>FOR EACH ROW</b></td><td>Una volta per ogni tupla modificata</td><td class="ok">SÌ (OLD e NEW sono singole tuple)</td><td>Quasi sempre — permette di sapere i valori della riga</td></tr>
+    <tr><td><b>FOR EACH STATEMENT</b></td><td>Una volta per tutta l'istruzione SQL</td><td class="no">NO (solo tabelle OLD TABLE / NEW TABLE)</td><td>Operazioni su insiemi, statistiche aggregate</td></tr>
+  </table>
+
+  <div class="box info">
+    <div class="box-label">All'esame del Poli</div>
+    <p>Quasi tutti gli esercizi richiedono <b>FOR EACH ROW</b>. È la granularità più comune e più flessibile. FOR EACH STATEMENT si usa raramente, di solito solo se esplicitamente richiesto.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- OLD NEW -->
+  <h2 id="oldnew">4. OLD e NEW — Accesso ai valori della riga</h2>
+  <p>All'interno di un trigger FOR EACH ROW puoi accedere ai valori della riga:</p>
+  <table class="tbl">
+    <tr><th>Variabile</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr>
+    <tr><td><code>NEW.colonna</code></td><td class="ok">Nuova riga inserita</td><td class="ok">Valori dopo la modifica</td><td class="no">Non disponibile</td></tr>
+    <tr><td><code>OLD.colonna</code></td><td class="no">Non disponibile</td><td class="ok">Valori prima della modifica</td><td class="ok">Riga eliminata</td></tr>
+  </table>
+
+  <div class="box example">
+    <div class="box-label">Esempio</div>
+    <p>Tabella PERFORMANCE(MOVIEID, PID, ROLE, salary). Trigger su INSERT:<br>
+    <code>NEW.salary</code> = il salary della riga appena inserita.<br>
+    <code>NEW.PID</code> = il PID del performer appena aggiunto.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- QUANDO -->
+  <h2 id="quando">5. Quando creare un trigger — Matrice degli eventi</h2>
+  <p>All'esame ti danno una tabella da mantenere (o una view materializzata) e devi capire su quali eventi e tabelle creare trigger. Ragiona così:</p>
+  <p>"Quale modifica a quale tabella può cambiare il contenuto della tabella target?"</p>
+
+  <div class="box example">
+    <div class="box-label">Esempio — TDE Febbraio 2024</div>
+    <p>Vista da materializzare: <code>SELECT P.PID, COALESCE(SUM(salary),0) AS cost FROM PROJECT P LEFT JOIN ASSIGNMENT A ON P.PID=A.PID LEFT JOIN EMP E ON E.EID=A.EID GROUP BY P.PID</code></p>
+    <table class="tbl">
+      <tr><th>Tabella</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr>
+      <tr><td>PROJECT</td><td class="ok">SÌ (nuovo progetto → riga in BUDGET con cost=0)</td><td class="no">NO (PK non cambia per assunzione)</td><td class="ok">SÌ (progetto cancellato → rimuovi da BUDGET)</td></tr>
+      <tr><td>EMP</td><td class="no">NO (non ha assignment → non cambia BUDGET)</td><td class="ok">SÌ (cambia salary → aggiorna BUDGET del progetto)</td><td class="no">NO (assignment viene eliminato prima)</td></tr>
+      <tr><td>ASSIGNMENT</td><td class="ok">SÌ (nuovo assignment → aggiunge salary al progetto)</td><td class="no">NO (PK non cambia)</td><td class="ok">SÌ (assignment rimosso → sottrae salary)</td></tr>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- METODO -->
+  <h2 id="metodo">6. Metodo passo-passo per scrivere un trigger</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Scegli l'evento: INSERT / UPDATE [OF col] / DELETE su quale tabella?</strong>
+      <p>Usa la matrice degli eventi per capirlo.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Scegli il timing: BEFORE o AFTER?</strong>
+      <p>Se devi bloccare l'operazione → BEFORE. Se devi propagare effetti → AFTER.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Scegli la granularità: FOR EACH ROW (quasi sempre)</strong>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Scrivi il corpo: cosa deve fare il trigger?</strong>
+      <p>Usa NEW.col e OLD.col per accedere ai valori. Puoi fare SELECT, INSERT, UPDATE, DELETE su altre tabelle. Se devi bloccare → usa RAISE EXCEPTION.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Verifica la terminazione</strong>
+      <p>Il tuo trigger attiva altri trigger? Costruisci il grafo di attivazione e verifica che sia aciclico (o che i cicli si interrompano).</p>
+    </div></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TERMINAZIONE -->
+  <h2 id="terminazione">7. Terminazione di un sistema di trigger</h2>
+  <p>Un sistema di trigger <b>termina</b> se, per qualsiasi sequenza di operazioni, l'esecuzione dei trigger finisce in un numero finito di passi. Se un trigger attiva un altro trigger che a sua volta attiva il primo, si ha un loop infinito.</p>
+
+  <h3>Grafo di attivazione</h3>
+  <p>Disegna un grafo dove:</p>
+  <ul>
+    <li>Ogni nodo è un trigger</li>
+    <li>C'è un arco da T1 a T2 se l'azione di T1 può attivare T2</li>
+  </ul>
+  <p>Se il grafo è <b>aciclico</b> → terminazione garantita. Se ci sono cicli → analizza se la condizione WHEN li interrompe prima o poi (condizione sufficiente ma non necessaria per terminare).</p>
+
+  <div class="box example">
+    <div class="box-label">Esempio — TDE 2023</div>
+    <p>T_total_salary (AFTER INSERT ON PERFORMANCE) → fa UPDATE su PERSON<br>
+    T_richest (AFTER UPDATE OF total_salary ON PERSON) → fa UPDATE su RICHEST</p>
+    <p>Grafo: T_total_salary → T_richest → (nessun altro trigger). Aciclico → <b>termina garantito</b>.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- EX BUDGET -->
+  <h2 id="ex-budget">8. Esempio completo — Mantenere la tabella BUDGET</h2>
+  <p>Schema: PROJECT, EMP(salary), ASSIGNMENT. Da mantenere: BUDGET(PID, cost).</p>
+
+  <pre><span class="cm">-- T1: nuovo progetto inserito → crea riga in BUDGET con cost=0</span>
+<span class="kw">CREATE TRIGGER</span> T1
+<span class="hl">AFTER INSERT ON</span> PROJECT
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">INSERT INTO</span> BUDGET <span class="kw">VALUES</span>(NEW.PID, 0);
+<span class="kw">END</span>;
+
+<span class="cm">-- T2: progetto eliminato → rimuovi da BUDGET</span>
+<span class="kw">CREATE TRIGGER</span> T2
+<span class="hl">AFTER DELETE ON</span> PROJECT
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">DELETE FROM</span> BUDGET <span class="kw">WHERE</span> PID = OLD.PID;
+<span class="kw">END</span>;
+
+<span class="cm">-- T3: salary di un dipendente aggiornato → aggiorna il BUDGET del progetto</span>
+<span class="kw">CREATE TRIGGER</span> T3
+<span class="hl">AFTER UPDATE OF</span> SALARY <span class="kw">ON</span> EMP
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">UPDATE</span> BUDGET
+  <span class="kw">SET</span> COST = COST + NEW.SALARY - OLD.SALARY
+  <span class="kw">WHERE</span> PID = (<span class="kw">SELECT</span> PID <span class="kw">FROM</span> ASSIGNMENT <span class="kw">WHERE</span> EID = NEW.EID);
+<span class="kw">END</span>;
+
+<span class="cm">-- T4: nuovo assignment → aggiungi salary al budget del progetto</span>
+<span class="kw">CREATE TRIGGER</span> T4
+<span class="hl">AFTER INSERT ON</span> ASSIGNMENT
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">UPDATE</span> BUDGET
+  <span class="kw">SET</span> COST = COST + (<span class="kw">SELECT</span> SALARY <span class="kw">FROM</span> EMP <span class="kw">WHERE</span> EID = NEW.EID)
+  <span class="kw">WHERE</span> PID = NEW.PID;
+<span class="kw">END</span>;
+
+<span class="cm">-- T5: assignment eliminato → sottrai salary dal budget</span>
+<span class="kw">CREATE TRIGGER</span> T5
+<span class="hl">AFTER DELETE ON</span> ASSIGNMENT
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">UPDATE</span> BUDGET
+  <span class="kw">SET</span> COST = COST - (<span class="kw">SELECT</span> SALARY <span class="kw">FROM</span> EMP <span class="kw">WHERE</span> EID = OLD.EID)
+  <span class="kw">WHERE</span> PID = OLD.PID;
+<span class="kw">END</span>;</pre>
+
+  <hr class="divider">
+
+  <!-- EX RICHEST -->
+  <h2 id="ex-richest">9. Esempio — Aggiornare il performer più ricco (RICHEST)</h2>
+  <p>Ogni volta che total_salary cambia in PERSON, aggiorna la tabella RICHEST con il PID del performer con salary massimo.</p>
+
+  <pre><span class="kw">CREATE TRIGGER</span> richest
+<span class="hl">AFTER UPDATE OF</span> total_salary <span class="kw">ON</span> PERSON
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">DECLARE</span>
+  rich <span class="hl">INT</span>;
+  tot  <span class="hl">INT</span>;
+<span class="kw">BEGIN</span>
+  <span class="cm">-- recupera il PID correntemente nella tabella RICHEST e il suo salary</span>
+  <span class="kw">SELECT</span> R.PID, P.total_salary <span class="kw">INTO</span> rich, tot
+  <span class="kw">FROM</span> RICHEST R <span class="kw">JOIN</span> PERSON P <span class="kw">ON</span> R.PID = P.PID;
+
+  <span class="kw">IF</span> rich <span class="kw">IS NULL THEN</span>
+    <span class="cm">-- RICHEST è vuota: inserisci il primo</span>
+    <span class="kw">INSERT INTO</span> RICHEST <span class="kw">VALUES</span> (NEW.PID);
+  <span class="kw">ELSE</span>
+    <span class="kw">IF</span> tot &lt; NEW.total_salary <span class="kw">THEN</span>
+      <span class="cm">-- il richest attuale è superato: aggiorna</span>
+      <span class="kw">UPDATE</span> RICHEST <span class="kw">SET</span> PID = NEW.PID;
+    <span class="kw">END IF</span>;
+  <span class="kw">END IF</span>;
+<span class="kw">END</span>;</pre>
+
+  <hr class="divider">
+
+  <!-- EX TOPK -->
+  <h2 id="ex-topk">10. Esempio — Mantenere Top-5 MOST_VERSATILE</h2>
+  <p>Ogni volta che un performer aggiunge un ruolo in un film, aggiorna la tabella MOST_VERSATILE con i 5 (PID, MOVIEID) con più ruoli nello stesso film. In caso di parità al 5° posto, includi tutti i pareggiati.</p>
+
+  <pre><span class="kw">CREATE TRIGGER</span> most_versatile
+<span class="hl">AFTER INSERT ON</span> PERFORMANCE
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">DECLARE</span>
+  n_roles <span class="hl">INT</span>;
+  fifth   <span class="hl">INT</span>;
+<span class="kw">BEGIN</span>
+  <span class="cm">-- conta i ruoli del performer nel film appena aggiornato</span>
+  <span class="kw">SELECT COUNT</span>(*) <span class="kw">INTO</span> n_roles
+  <span class="kw">FROM</span> PERFORMANCE
+  <span class="kw">WHERE</span> PID = NEW.PID <span class="kw">AND</span> MOVIEID = NEW.MOVIEID;
+
+  <span class="cm">-- aggiorna o inserisce la riga (PID, MOVIEID) in MOST_VERSATILE</span>
+  <span class="kw">IF EXISTS</span> (<span class="kw">SELECT</span> 1 <span class="kw">FROM</span> MOST_VERSATILE
+             <span class="kw">WHERE</span> PID = NEW.PID <span class="kw">AND</span> MOVIEID = NEW.MOVIEID) <span class="kw">THEN</span>
+    <span class="kw">UPDATE</span> MOST_VERSATILE <span class="kw">SET</span> number_of_roles = n_roles
+    <span class="kw">WHERE</span> PID = NEW.PID <span class="kw">AND</span> MOVIEID = NEW.MOVIEID;
+  <span class="kw">ELSE</span>
+    <span class="kw">INSERT INTO</span> MOST_VERSATILE <span class="kw">VALUES</span> (NEW.PID, NEW.MOVIEID, n_roles);
+  <span class="kw">END IF</span>;
+
+  <span class="cm">-- trova il numero di ruoli del 5° classificato attuale</span>
+  <span class="kw">SELECT MIN</span>(number_of_roles) <span class="kw">INTO</span> fifth
+  <span class="kw">FROM</span> (<span class="kw">SELECT</span> number_of_roles
+        <span class="kw">FROM</span> MOST_VERSATILE
+        <span class="kw">ORDER BY</span> number_of_roles <span class="kw">DESC LIMIT</span> 5) sub;
+
+  <span class="cm">-- rimuovi tutti quelli sotto il 5° (non in pareggio)</span>
+  <span class="kw">DELETE FROM</span> MOST_VERSATILE
+  <span class="kw">WHERE</span> number_of_roles &lt; fifth;
+<span class="kw">END</span>;</pre>
+
+  <div class="box warn">
+    <div class="box-label">Nota sul Top-5 con parità</div>
+    <p>L'esercizio richiede che in caso di parità al 5° posto vengano inclusi <b>tutti</b> i pareggiati. Per questo si elimina solo chi ha un numero di ruoli <i>strettamente minore</i> del minimo nei top-5, non chi è uguale al minimo.</p>
+  </div>
+
+  <div class="box info" style="margin-top:32px">
+    <div class="box-label">Prossimi passi</div>
+    <p>Hai capito i trigger? Vai al <a href="quiz.html">Quiz Arcade</a> oppure continua con la guida su <a href="guide_jpa.html">JPA</a>.</p>
+  </div>
+
+  <footer>DB2 Politecnico · Guida Triggers</footer>
+</main>
+</div>
+</body>
+</html>

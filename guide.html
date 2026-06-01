@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DB2 — Guide agli Esercizi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16110d;--bg2:#1f1812;--card:#241c15;--card2:#2c2219;--ink:#f5eee2;--soft:#a99c89;--line:#3a2e22;
+    --conc:#4f8cff;--rank:#ff7a3d;--phys:#b07cff;--trig:#2fd398;--jpa:#ffc24b;--theo:#ff6b9d;
+    --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Spline Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;
+    padding:clamp(14px,3.5vw,40px);min-height:100vh;
+    background-image:radial-gradient(circle at 8% 0%,rgba(79,140,255,.08),transparent 40%),
+    radial-gradient(circle at 92% 5%,rgba(255,122,61,.08),transparent 40%),
+    radial-gradient(circle at 50% 100%,rgba(176,124,255,.08),transparent 40%);}
+  .wrap{max-width:900px;margin:0 auto}
+  .topbar{display:flex;align-items:center;gap:14px;margin-bottom:32px}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--soft);text-decoration:none;border:1px solid var(--line);padding:8px 14px;border-radius:10px;
+    transition:border-color .2s,color .2s}
+  .back:hover{border-color:var(--soft);color:var(--ink)}
+  .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--soft)}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(36px,8vw,58px);line-height:.95;letter-spacing:-.02em;margin:10px 0 8px}
+  h1 em{font-style:italic;font-weight:400;background:linear-gradient(90deg,var(--trig),var(--conc));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .subtitle{color:var(--soft);font-size:16px;max-width:600px;margin-bottom:36px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .gcard{display:block;text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:24px;transition:transform .15s,border-color .15s,box-shadow .15s;box-shadow:var(--shadow)}
+  .gcard:hover{transform:translateY(-3px);box-shadow:0 28px 60px -20px rgba(0,0,0,.8)}
+  .gcard .icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-size:22px;margin-bottom:16px;flex:none}
+  .gcard h2{font-family:'Fraunces',serif;font-weight:700;font-size:20px;margin-bottom:8px}
+  .gcard p{font-size:13.5px;color:var(--soft);line-height:1.5}
+  .gcard .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:3px 9px;border-radius:20px;font-weight:600}
+  .arrow{margin-top:18px;font-size:13px;color:var(--soft);display:flex;align-items:center;gap:6px;font-weight:600}
+  .tip-box{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-top:32px}
+  .tip-box .tit{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--soft);margin-bottom:10px}
+  .tip-box ul{padding-left:20px;color:var(--soft);font-size:14px;line-height:1.8}
+  .tip-box ul li b{color:var(--ink)}
+  footer{margin-top:40px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--soft)}
+  footer a{color:var(--soft);text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="back" href="index.html">← Tracker TDE</a>
+    <a class="back" href="quiz.html">Quiz Arcade</a>
+  </div>
+  <div class="kicker">Basi di Dati 2 · Politecnico di Milano</div>
+  <h1>Guide agli <em>Esercizi</em></h1>
+  <p class="subtitle">Spiega come risolvere ogni tipo di esercizio dell'esame, passo dopo passo, con esempi reali dai TDE passati.</p>
+
+  <div class="grid">
+    <a class="gcard" href="guide_concurrency.html" style="border-color:rgba(79,140,255,.3)">
+      <div class="icon" style="background:rgba(79,140,255,.15)">🔒</div>
+      <h2 style="color:var(--conc)">Concurrency Control</h2>
+      <p>Come classificare uno schedule in VSR, CSR, 2PL, Strict 2PL, TS Mono e TS Multi. Come rilevare deadlock distribuiti con Obermarck.</p>
+      <div class="tags">
+        <span class="tag" style="background:rgba(79,140,255,.15);color:var(--conc)">VSR / CSR</span>
+        <span class="tag" style="background:rgba(79,140,255,.15);color:var(--conc)">2PL</span>
+        <span class="tag" style="background:rgba(79,140,255,.15);color:var(--conc)">TS Multi</span>
+        <span class="tag" style="background:rgba(79,140,255,.15);color:var(--conc)">Obermarck</span>
+      </div>
+      <div class="arrow">Apri la guida →</div>
+    </a>
+
+    <a class="gcard" href="guide_ranking.html" style="border-color:rgba(255,122,61,.3)">
+      <div class="icon" style="background:rgba(255,122,61,.15)">🏆</div>
+      <h2 style="color:var(--rank)">Ranking &amp; Skyline</h2>
+      <p>Come calcolare il top-k con FA, TA e NRA. Come trovare lo skyline con SFS. Cosa sono la soglia, la dominanza e il 2-skyband.</p>
+      <div class="tags">
+        <span class="tag" style="background:rgba(255,122,61,.15);color:var(--rank)">FA / TA / NRA</span>
+        <span class="tag" style="background:rgba(255,122,61,.15);color:var(--rank)">Skyline / SFS</span>
+        <span class="tag" style="background:rgba(255,122,61,.15);color:var(--rank)">2-skyband</span>
+      </div>
+      <div class="arrow">Apri la guida →</div>
+    </a>
+
+    <a class="gcard" href="guide_physical.html" style="border-color:rgba(176,124,255,.3)">
+      <div class="icon" style="background:rgba(176,124,255,.15)">💾</div>
+      <h2 style="color:var(--phys)">Physical Databases</h2>
+      <p>Come stimare i costi di accesso con B+ tree, hash index e scansione sequenziale. Come scegliere il piano di esecuzione migliore.</p>
+      <div class="tags">
+        <span class="tag" style="background:rgba(176,124,255,.15);color:var(--phys)">B+ tree</span>
+        <span class="tag" style="background:rgba(176,124,255,.15);color:var(--phys)">Hash index</span>
+        <span class="tag" style="background:rgba(176,124,255,.15);color:var(--phys)">Query plan</span>
+        <span class="tag" style="background:rgba(176,124,255,.15);color:var(--phys)">NLJ</span>
+      </div>
+      <div class="arrow">Apri la guida →</div>
+    </a>
+
+    <a class="gcard" href="guide_triggers.html" style="border-color:rgba(47,211,152,.3)">
+      <div class="icon" style="background:rgba(47,211,152,.15)">⚡</div>
+      <h2 style="color:var(--trig)">Triggers</h2>
+      <p>Come progettare un trigger da zero. Differenza tra BEFORE/AFTER, FOR EACH ROW/STATEMENT, OLD/NEW. Come verificare la terminazione.</p>
+      <div class="tags">
+        <span class="tag" style="background:rgba(47,211,152,.15);color:var(--trig)">BEFORE / AFTER</span>
+        <span class="tag" style="background:rgba(47,211,152,.15);color:var(--trig)">FOR EACH ROW</span>
+        <span class="tag" style="background:rgba(47,211,152,.15);color:var(--trig)">Terminazione</span>
+      </div>
+      <div class="arrow">Apri la guida →</div>
+    </a>
+
+    <a class="gcard" href="guide_jpa.html" style="border-color:rgba(255,194,75,.3)">
+      <div class="icon" style="background:rgba(255,194,75,.15)">☕</div>
+      <h2 style="color:var(--jpa)">JPA</h2>
+      <p>Come disegnare le entità JPA, scegliere le annotazioni giuste, decidere il fetch type e il cascade, e identificare il lato owner.</p>
+      <div class="tags">
+        <span class="tag" style="background:rgba(255,194,75,.15);color:var(--jpa)">@OneToMany</span>
+        <span class="tag" style="background:rgba(255,194,75,.15);color:var(--jpa)">LAZY / EAGER</span>
+        <span class="tag" style="background:rgba(255,194,75,.15);color:var(--jpa)">mappedBy</span>
+        <span class="tag" style="background:rgba(255,194,75,.15);color:var(--jpa)">Cascade</span>
+      </div>
+      <div class="arrow">Apri la guida →</div>
+    </a>
+  </div>
+
+  <div class="tip-box" style="margin-top:28px">
+    <div class="tit">Come usare queste guide</div>
+    <ul>
+      <li><b>Prima di tutto:</b> leggi la guida dall'inizio — ogni sezione spiega il "perché" prima del "come".</li>
+      <li><b>Esempi evidenziati:</b> ogni guida contiene esempi reali tratti dai TDE passati del Politecnico.</li>
+      <li><b>Dopo aver letto:</b> torna al <a href="quiz.html" style="color:var(--ink)">Quiz Arcade</a> per testare quello che hai imparato.</li>
+      <li><b>Per i TDE veri:</b> usa il <a href="index.html" style="color:var(--ink)">Tracker</a> per segnare quali hai già visto e a quale difficoltà.</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Basi di Dati 2 · Politecnico di Milano · Guide agli esercizi</p>
+  </footer>
+</div>
+</body>
+</html>

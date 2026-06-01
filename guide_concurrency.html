@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DB2 — Guida Concurrency Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16110d;--bg2:#1f1812;--card:#241c15;--card2:#2c2219;--ink:#f5eee2;--soft:#a99c89;--line:#3a2e22;
+    --acc:#4f8cff;--ok:#36d27a;--no:#ff5a5a;--warn:#ffc24b;
+    --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Spline Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+  a{color:var(--acc);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* LAYOUT */
+  .layout{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh}
+  @media(max-width:720px){.layout{grid-template-columns:1fr}}
+
+  /* SIDEBAR */
+  nav{background:var(--bg2);border-right:1px solid var(--line);padding:24px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  @media(max-width:720px){nav{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:16px 0}}
+  .nav-brand{padding:0 20px 20px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .nav-brand .back{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--soft);display:flex;align-items:center;gap:6px}
+  .nav-brand .title{font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin-top:10px;color:var(--acc)}
+  nav ul{list-style:none;padding:0 10px}
+  nav ul li a{display:block;padding:7px 10px;border-radius:8px;font-size:13px;color:var(--soft);transition:background .15s,color .15s}
+  nav ul li a:hover,nav ul li a.active{background:rgba(79,140,255,.12);color:var(--acc);text-decoration:none}
+  .nav-section{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);padding:14px 10px 4px;display:block}
+  .nav-links{padding:0 8px;margin-top:12px}
+  .nav-links a{display:block;font-size:12px;color:var(--soft);padding:4px 8px;border-radius:6px;transition:color .15s}
+  .nav-links a:hover{color:var(--ink);text-decoration:none}
+
+  /* MAIN */
+  main{padding:clamp(20px,4vw,56px);max-width:820px}
+
+  /* TYPOGRAPHY */
+  .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--soft);margin-bottom:8px}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(32px,6vw,50px);line-height:1;letter-spacing:-.02em;margin-bottom:14px;color:var(--acc)}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:26px;margin:48px 0 16px;color:var(--ink);scroll-margin-top:24px}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:30px 0 12px;color:var(--acc)}
+  p{margin-bottom:14px;font-size:15px}
+  ul,ol{padding-left:22px;margin-bottom:14px;font-size:15px}
+  li{margin-bottom:6px}
+  b{color:var(--ink);font-weight:700}
+  code{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--card2);padding:2px 6px;border-radius:5px;color:var(--warn)}
+  .mono{font-family:'IBM Plex Mono',monospace}
+
+  /* CARDS */
+  .box{border-radius:14px;padding:18px 20px;margin:16px 0}
+  .box.info{background:rgba(79,140,255,.08);border:1px solid rgba(79,140,255,.25)}
+  .box.example{background:rgba(47,211,152,.07);border:1px solid rgba(47,211,152,.25)}
+  .box.warn{background:rgba(255,194,75,.07);border:1px solid rgba(255,194,75,.25)}
+  .box.danger{background:rgba(255,90,90,.07);border:1px solid rgba(255,90,90,.25)}
+  .box-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+  .box.info .box-label{color:var(--acc)}
+  .box.example .box-label{color:var(--ok)}
+  .box.warn .box-label{color:var(--warn)}
+  .box.danger .box-label{color:var(--no)}
+
+  /* STEPS */
+  .steps{counter-reset:step;margin:18px 0}
+  .step{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
+  .step-num{counter-increment:step;content:counter(step);background:var(--acc);color:#0a1020;
+    width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:900;font-size:15px;flex:none;margin-top:2px}
+  .step-num::before{content:counter(step)}
+  .step-body{flex:1}
+  .step-body strong{display:block;font-size:15px;margin-bottom:4px}
+  .step-body p{margin-bottom:0;font-size:14.5px;color:var(--soft)}
+  .step-body p b{color:var(--ink)}
+
+  /* TABLE */
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;font-family:'IBM Plex Mono',monospace}
+  .tbl th{background:var(--card2);padding:8px 12px;text-align:left;font-weight:600;color:var(--soft);border:1px solid var(--line)}
+  .tbl td{padding:8px 12px;border:1px solid var(--line);color:var(--ink)}
+  .tbl tr:nth-child(even) td{background:var(--bg2)}
+  .tbl .ok{color:var(--ok);font-weight:700}
+  .tbl .no{color:var(--no);font-weight:700}
+
+  .divider{border:none;border-top:1px solid var(--line);margin:40px 0}
+  footer{padding:30px 20px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav>
+  <div class="nav-brand">
+    <a class="back" href="guide.html">← Guide</a>
+    <div class="title">Concurrency Control</div>
+  </div>
+  <ul>
+    <li><span class="nav-section">Classificazione schedule</span></li>
+    <li><a href="#intro">Introduzione</a></li>
+    <li><a href="#conflitti">1. Conflitti tra operazioni</a></li>
+    <li><a href="#csr">2. Classe CSR</a></li>
+    <li><a href="#vsr">3. Classe VSR</a></li>
+    <li><a href="#2pl">4. Classe 2PL</a></li>
+    <li><a href="#strict2pl">5. Strict 2PL</a></li>
+    <li><a href="#tsmono">6. TS Mono</a></li>
+    <li><a href="#tsmulti">7. TS Multi (SI)</a></li>
+    <li><a href="#ordine">8. Ordine di classificazione</a></li>
+    <li><span class="nav-section">Deadlock distribuito</span></li>
+    <li><a href="#obermarck">9. Algoritmo di Obermarck</a></li>
+    <li><span class="nav-section">Navigazione</span></li>
+  </ul>
+  <div class="nav-links">
+    <a href="index.html">← Tracker TDE</a>
+    <a href="quiz.html">Quiz Arcade</a>
+    <a href="guide_ranking.html">Ranking →</a>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main>
+  <div class="kicker">Guida completa · DB2 Politecnico</div>
+  <h1>Concurrency Control</h1>
+  <p style="font-size:16px;color:var(--soft)">Questa guida ti insegna come classificare uno schedule nelle cinque classi dell'esame e come rilevare deadlock distribuiti. Ogni sezione parte da zero.</p>
+
+  <!-- INTRO -->
+  <h2 id="intro">Prima di tutto: cos'è uno schedule?</h2>
+  <p>Un <b>database</b> può essere usato da più utenti contemporaneamente. Immagina un sito di e-commerce: mentre tu compri, altri mille utenti stanno leggendo i prezzi, aggiornando quantità, completando pagamenti. Queste operazioni parallele si chiamano <b>transazioni</b>.</p>
+  <p>Una <b>transazione</b> è una sequenza di operazioni atomica: o va tutta in porto (commit) o viene annullata tutta (abort). Le operazioni di base su una risorsa <code>x</code> sono:</p>
+  <ul>
+    <li><code>r_i(x)</code> — la transazione <b>T_i legge</b> la risorsa x</li>
+    <li><code>w_i(x)</code> — la transazione <b>T_i scrive</b> la risorsa x</li>
+    <li><code>c_i</code> — T_i fa <b>commit</b> (conferma tutte le modifiche)</li>
+    <li><code>a_i</code> — T_i fa <b>abort</b> (annulla tutto)</li>
+  </ul>
+  <p>Uno <b>schedule</b> S è l'interleaving (mescolanza) di operazioni di più transazioni nell'ordine reale in cui il DB le esegue. Il problema è: questo mescolamento può produrre risultati sbagliati?</p>
+
+  <div class="box example">
+    <div class="box-label">Esempio concreto</div>
+    <p>T1 trasferisce 100€ dal conto A al conto B. T2 legge il saldo di A.<br>
+    <b>Schedule:</b> <code>r1(A) w1(A) r2(A) r2(B) w1(B)</code><br>
+    T2 legge A dopo che T1 ha già sottratto 100€ ma prima che li abbia aggiunti a B: vede un saldo incoerente!</p>
+  </div>
+
+  <p>Per evitare questi problemi, i DBMS controllano che gli schedule siano <b>serializzabili</b>, cioè equivalenti all'esecuzione seriale (una transazione alla volta) di tutte le transazioni.</p>
+
+  <hr class="divider">
+
+  <!-- CONFLITTI -->
+  <h2 id="conflitti">1. Conflitti tra operazioni</h2>
+  <p>Due operazioni di transazioni <i>diverse</i> sono in <b>conflitto</b> se:</p>
+  <ul>
+    <li>Agiscono sulla <b>stessa risorsa</b> (stesso x)</li>
+    <li>Almeno una delle due è una <b>scrittura</b></li>
+  </ul>
+  <p>Esistono tre tipi di conflitto:</p>
+  <table class="tbl">
+    <tr><th>Tipo</th><th>Operazioni</th><th>Problema</th></tr>
+    <tr><td><b>Read-Write (RW)</b></td><td><code>r_i(x)</code> e <code>w_j(x)</code></td><td>T_j scrive mentre T_i ha letto: T_i potrebbe leggere valori diversi</td></tr>
+    <tr><td><b>Write-Read (WR)</b></td><td><code>w_i(x)</code> e <code>r_j(x)</code></td><td>T_j legge un valore scritto da T_i non ancora committata: dirty read</td></tr>
+    <tr><td><b>Write-Write (WW)</b></td><td><code>w_i(x)</code> e <code>w_j(x)</code></td><td>Entrambe scrivono x: l'ordine è importante</td></tr>
+  </table>
+  <div class="box warn">
+    <div class="box-label">Attenzione</div>
+    <p><b>Due letture (r_i(x) e r_j(x)) NON sono mai in conflitto</b>, perché leggere non modifica nulla.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CSR -->
+  <h2 id="csr">2. Classe CSR — Conflict Serializable</h2>
+  <p>Uno schedule è in <b>CSR</b> se e solo se il suo <b>grafo dei conflitti è aciclico</b>.</p>
+
+  <h3>Come costruire il grafo dei conflitti</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Elenca tutte le coppie in conflitto</strong>
+      <p>Per ogni coppia di operazioni su <b>stessa risorsa</b> di <b>transazioni diverse</b>, dove almeno una è una write, segna chi viene prima nello schedule.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Disegna i nodi del grafo</strong>
+      <p>Ogni transazione T1, T2, T3… diventa un <b>nodo</b> del grafo.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Aggiungi gli archi</strong>
+      <p>Per ogni coppia in conflitto, aggiungi un arco <b>T_i → T_j</b> se l'operazione di T_i viene <i>prima</i> nello schedule di quella di T_j. Se T_i e T_j hanno più conflitti tra loro, basta un arco solo.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Verifica l'aciclicità</strong>
+      <p>Se il grafo <b>non ha cicli</b> → schedule in CSR. Se c'è almeno un ciclo → NON in CSR.</p>
+    </div></div>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio dai TDE — Esame Giugno 2024</div>
+    <p><b>Schedule S:</b> <code>r1(Z) r2(X) w2(Y) w3(Y) w4(Z) w2(Z) w5(X) r5(Y) w4(X) r6(Y) w6(X)</code></p>
+    <p>Coppie in conflitto su Z: <code>w4(Z)</code> viene prima di <code>w2(Z)</code> → arco T4→T2. Ma <code>r2(X)</code> viene prima di <code>w4(X)</code> → arco T2→T4.<br>
+    Ecco il ciclo: <b>T2→T4→T2</b>. Quindi S <span class="no">NON è CSR</span>.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- VSR -->
+  <h2 id="vsr">3. Classe VSR — View Serializable</h2>
+  <p>VSR è una classe <i>più ampia</i> di CSR: uno schedule può essere VSR anche se ha cicli nel grafo dei conflitti, grazie alle <b>scritture cieche</b> (blind write).</p>
+
+  <h3>Concetti chiave</h3>
+  <ul>
+    <li><b>Reads-from:</b> <code>r_j(x)</code> reads-from <code>w_i(x)</code> se T_i è l'ultima transazione ad aver scritto x prima che T_j legga x nello schedule.</li>
+    <li><b>Final write:</b> per ogni risorsa x, è la transazione che scrive x per <i>ultima</i> nello schedule.</li>
+    <li><b>Blind write:</b> una scrittura <code>w_i(x)</code> dove T_i non ha mai letto x prima di scrivere.</li>
+  </ul>
+
+  <h3>Come verificare se uno schedule è VSR</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Trova le reads-from dello schedule S</strong>
+      <p>Per ogni <code>r_j(x)</code>, guarda quale <code>w_i(x)</code> viene subito prima (senza altre write di x in mezzo). Quello è il reads-from.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Trova le final write di S</strong>
+      <p>Per ogni risorsa x, qual è l'ultima transazione che la scrive nello schedule?</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Cerca uno schedule seriale S' con le stesse reads-from e final write</strong>
+      <p>Prova tutte le permutazioni di (T1, T2, …, Tn). Se almeno una produce gli stessi reads-from e final write → S è VSR.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Trucco: individua le blind write</strong>
+      <p>Se uno schedule NON è CSR, puoi provare a <b>spostare le blind write</b> per renderlo equivalente a uno schedule seriale. Se una blind write viene spostata, non cambia i reads-from (nessuno leggeva quel valore), quindi è una mossa "gratis".</p>
+    </div></div>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio dai TDE — Esame Gennaio 2024</div>
+    <p><b>S =</b> <code>w3(x) r2(y) r1(x) w3(z) w2(x) r3(y) w1(x) w1(z)</code></p>
+    <p><b>Reads-from di S:</b> r1(x) reads-from w3(x) (l'unica write di x prima di r1). r2(y) reads-from DB iniziale. r3(y) reads-from DB iniziale.</p>
+    <p><b>Final writes:</b> x → w1(x); z → w1(z); y → nessuna (mai scritta)</p>
+    <p><b>Blind writes:</b> w2(x) è cieca (T2 non ha mai letto x prima). Spostando w2(x) prima di w3(x), si ottiene lo schedule seriale T2, T3, T1 con gli stessi reads-from e final write. <span class="ok">S è VSR</span> ma <span class="no">NON CSR</span>.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="box-label">Ricorda sempre</div>
+    <p><b>CSR ⊆ VSR</b>: se uno schedule è CSR allora è anche VSR (automaticamente). Non serve rifare l'analisi VSR se hai già dimostrato CSR.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 2PL -->
+  <h2 id="2pl">4. Classe 2PL — Two-Phase Locking</h2>
+  <p>Il protocollo 2PL dice che ogni transazione deve rispettare due fasi: prima <b>acquisisce</b> tutti i lock che le servono, poi li <b>rilascia</b> tutti. Non può acquisire un lock dopo averne già rilasciato uno.</p>
+  <p>Tipi di lock: <b>S (Shared/Read)</b> per leggere, <b>X (Exclusive/Write)</b> per scrivere. S è compatibile con S, X non è compatibile con niente.</p>
+
+  <h3>Come costruire la tabella 2PL</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Crea una tabella con colonne = risorse, righe = posizione nello schedule</strong>
+      <p>Ogni cella mostra l'operazione del numero di passo dello schedule.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Regola: "Lock il più tardi possibile, Unlock il prima possibile"</strong>
+      <p>Per <b>2PL</b>: T_i deve acquisire il lock su x <b>prima</b> di operare su x, e può rilasciarlo <b>subito dopo</b> l'ultima operazione su x — ma solo se non ha ancora acquisito altri lock nuovi dopo.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Cerca violazioni: lock dopo unlock della stessa transazione</strong>
+      <p>Se T_i rilascia il lock su y al passo 5 e poi deve acquisire il lock su z al passo 8 → <b>violazione 2PL</b>: ha già iniziato la fase di shrinking ma vuole ancora acquisire. Lo schedule NON è 2PL.</p>
+    </div></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-label">Scorciatoia</div>
+    <p><b>Se lo schedule NON è CSR, non può essere 2PL</b> (perché 2PL ⊆ CSR). Puoi fermarti prima di costruire la tabella. Scrivi: "Poiché S ∉ CSR e 2PL ⊆ CSR, S ∉ 2PL".</p>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio — come leggere la tabella</div>
+    <p>Per lo schedule <code>r1(b) r2(a) w2(a) r1(c) w2(b) r2(c) w2(c) r1(a)</code>:</p>
+    <table class="tbl">
+      <tr><th>Passo</th><th>b</th><th>a</th><th>c</th></tr>
+      <tr><td>1 r1(b)</td><td>↑1 S-lock</td><td></td><td></td></tr>
+      <tr><td>2 r2(a)</td><td></td><td>↑2 S-lock</td><td></td></tr>
+      <tr><td>3 w2(a)</td><td></td><td>upgrade X2</td><td></td></tr>
+      <tr><td>4 r1(c)</td><td></td><td></td><td>↑1 S-lock</td></tr>
+      <tr><td>5 w2(b)</td><td>↑2 X-lock (ma ↓1 prima?) → conflitto!</td><td></td><td></td></tr>
+    </table>
+    <p>T2 vuole la X su b al passo 5, ma T1 ha già l'S su b e non l'ha ancora rilasciata. Il scheduler mette T2 in attesa. Quando T1 rilascia b, T2 può proseguire. La 2PL verifica se T2 acquista nuovi lock <i>dopo</i> aver fatto unlock.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STRICT 2PL -->
+  <h2 id="strict2pl">5. Strict 2PL</h2>
+  <p>Strict 2PL è uguale a 2PL ma con una regola aggiuntiva: <b>tutti i lock vengono rilasciati solo al momento del commit/abort</b>, non prima.</p>
+  <p>Questo elimina le <b>dirty read</b>: nessuno può leggere dati scritti da T_i finché T_i non ha committato.</p>
+
+  <div class="box info">
+    <div class="box-label">Gerarchia delle classi</div>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:14px;text-align:center;letter-spacing:.05em">
+      Strict 2PL &nbsp;⊆&nbsp; 2PL &nbsp;⊆&nbsp; CSR &nbsp;⊆&nbsp; VSR
+    </p>
+    <p style="margin-top:10px">Ogni classe è più <i>restrittiva</i> (più piccola) della successiva. Strict 2PL garantisce più proprietà ma limita di più la concorrenza.</p>
+  </div>
+
+  <h3>Come verificare Strict 2PL</h3>
+  <p>Uno schedule è Strict 2PL se esiste un'assegnazione di lock compatibile con le regole 2PL dove <b>tutti gli unlock avvengono dopo il commit della transazione</b>. Se 2PL fallisce, anche Strict 2PL fallisce.</p>
+
+  <div class="box example">
+    <div class="box-label">Cosa trovate spesso all'esame</div>
+    <p>Dato uno schedule, l'esame chiede di classificarlo rispetto a tutte e 5 le classi. Spesso uno schedule è CSR (e quindi anche VSR) ma non 2PL — oppure è VSR ma non CSR. La classificazione segue sempre la gerarchia: se è CSR, è anche VSR; se non è CSR, non è 2PL né Strict 2PL.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TS MONO -->
+  <h2 id="tsmono">6. TS Mono — Timestamp Monotono</h2>
+  <p>TS Mono è un protocollo alternativo ai lock: ogni transazione riceve un <b>timestamp</b> (numero crescente) quando inizia, e le operazioni devono rispettare l'ordine dei timestamp.</p>
+
+  <h3>Regole TS Mono</h3>
+  <table class="tbl">
+    <tr><th>Operazione</th><th>Controllo</th><th>Se fallisce</th></tr>
+    <tr><td><code>r_i(x)</code></td><td>i ≥ WTM(x) ?</td><td>T_i viene uccisa (abort)</td></tr>
+    <tr><td><code>w_i(x)</code></td><td>i ≥ RTM(x) AND i ≥ WTM(x) ?</td><td>T_i viene uccisa (abort)</td></tr>
+  </table>
+  <p>dove <b>RTM(x)</b> = timestamp dell'ultima transazione che ha letto x, <b>WTM(x)</b> = timestamp dell'ultima transazione che ha scritto x.</p>
+
+  <div class="box warn">
+    <div class="box-label">Attenzione</div>
+    <p>TS Mono <b>non è comparabile</b> con 2PL nella gerarchia: ci sono schedule TS Mono che non sono 2PL e viceversa. Entrambi sono sottoinsiemi di CSR.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TS MULTI -->
+  <h2 id="tsmulti">7. TS Multi / Snapshot Isolation</h2>
+  <p>TS Multi è la versione usata in pratica nei DBMS moderni (PostgreSQL, Oracle…). Ogni transazione legge una <b>snapshot</b> del DB al momento del suo inizio, quindi non vede le modifiche di altre transazioni che non avevano ancora committato. I problemi si verificano solo sulle <b>scritture concorrenti</b>.</p>
+
+  <h3>Come compilare la tabella TS Multi (convenzione dell'esame)</h3>
+  <p>La tabella ha colonne per ogni risorsa: RTM(x) e WTM(x). La notazione è <code>RTM(x) = i(j)</code> dove i = timestamp della transazione che ha letto, j = WTM al momento della lettura (la snapshot vista).</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Inizializza: RTM(x) = 0, WTM(x) = 0 per tutte le risorse</strong>
+      <p>WTM a 0 significa che il valore è quello iniziale del DB (scritto da una "transazione 0" virtuale).</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Per ogni r_i(x): aggiorna RTM(x) = i(WTM_corrente)</strong>
+      <p>Scrivi i(j) dove j è il WTM attuale di x al momento della lettura. Non ci sono controlli che uccidono T_i per una lettura.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Per ogni w_i(x): controlla se i &lt; last WTM(x)</strong>
+      <p>Se l'ultimo WTM(x) è stato aggiornato da una transazione j con j &gt; i → T_i viene uccisa (ha lavorato su una snapshot già superata da una write più recente). Altrimenti aggiorna WTM(x) aggiungendo i alla lista.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Per ogni w_i(x): controlla anche RTM(x) &gt; i</strong>
+      <p>Se qualcuno ha letto x con timestamp &gt; i (cioè dopo che i aveva "iniziato"), la write di i sarebbe andata nel passato → T_i viene uccisa.</p>
+    </div></div>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio dai TDE — Esame Settembre 2025</div>
+    <p><b>S =</b> <code>r1(x) w4(t) r5(x) w1(y) r2(y) r3(t) w5(y) r4(y) w2(z) r3(z) w3(y)</code></p>
+    <p>Quando arriva <b>w3(y)</b>: RTM(y) = 4 (perché r4(y) aveva letto y con timestamp 4). Poiché 3 &lt; RTM(y) = 4 → <b>T3 viene uccisa</b>. Lo schedule NON è TS Multi.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ORDINE -->
+  <h2 id="ordine">8. Ordine strategico per la classificazione all'esame</h2>
+  <p>Agli esami del Politecnico, ogni schedule va classificato rispetto a tutte e 5 le classi. Segui questo ordine per risparmiare tempo:</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Prima: costruisci il grafo dei conflitti</strong>
+      <p>Se il grafo è <b>aciclico</b> → <span class="ok">CSR: SÌ</span> → automaticamente <span class="ok">VSR: SÌ</span> → poi verifica 2PL separatamente.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Se CSR = NO: cerca blind write per VSR</strong>
+      <p>Se il grafo ha cicli, controlla se ci sono blind write spostabili. Se sì → <span class="ok">VSR: SÌ</span>. Se no (o non abbastanza) → <span class="no">VSR: NO</span> → anche 2PL e Strict 2PL sono automaticamente NO.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Verifica 2PL (solo se CSR = SÌ)</strong>
+      <p>Costruisci la tabella lock/unlock. Se esiste un'assegnazione valida → <span class="ok">2PL: SÌ</span>.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Verifica Strict 2PL (solo se 2PL = SÌ)</strong>
+      <p>Tutti i lock rilasciati solo al commit? Se sì → <span class="ok">Strict 2PL: SÌ</span>.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Infine: TS Multi (sempre)</strong>
+      <p>TS Multi non segue la gerarchia delle altre classi. Compila la tabella indipendentemente.</p>
+    </div></div>
+  </div>
+
+  <table class="tbl" style="margin-top:20px">
+    <tr><th>Classe</th><th>Dipende da</th><th>Scorciatoia</th></tr>
+    <tr><td>CSR</td><td>Grafo aciclico</td><td>—</td></tr>
+    <tr><td>VSR</td><td>CSR oppure blind write</td><td>CSR → VSR gratis</td></tr>
+    <tr><td>2PL</td><td>CSR (necessario)</td><td>NON-CSR → NON-2PL</td></tr>
+    <tr><td>Strict 2PL</td><td>2PL (necessario)</td><td>NON-2PL → NON-Strict 2PL</td></tr>
+    <tr><td>TS Multi</td><td>Tabella separata</td><td>Nessuna scorciatoia</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- OBERMARCK -->
+  <h2 id="obermarck">9. Deadlock distribuito — Algoritmo di Obermarck</h2>
+  <p>In un sistema <b>distribuito</b>, il DB è distribuito su più nodi. Un deadlock può esistere tra transazioni su nodi diversi: nessun nodo da solo riesce a rilevarlo perché vede solo una parte del grafo di attesa.</p>
+
+  <h3>Cos'è il wait-for graph</h3>
+  <p>Un arco <code>t_i → t_j</code> significa "la transazione T_i sta aspettando che T_j rilasci una risorsa". Un deadlock è un <b>ciclo</b> in questo grafo. Su ogni nodo ci sono anche archi del tipo <code>E_X → t_i</code> (significa "T_i sta aspettando una transazione esterna al nodo X") e <code>t_j → E_X</code> (significa "una transazione esterna al nodo X sta aspettando T_j").</p>
+
+  <h3>Algoritmo di Obermarck</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Ogni nodo esamina i propri archi E_X → … → E_Y</strong>
+      <p>Se esiste un cammino che inizia con <code>E_X →</code> e finisce con <code>→ E_Y</code>, il nodo può comunicare al nodo Y il cammino trovato.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Regola di trasmissione (2 convenzioni agli esami)</strong>
+      <p><b>Convenzione i &gt; j:</b> il nodo trasmette il cammino <code>t_i → t_j</code> al nodo downstream se i &gt; j (il timestamp della transazione mittente è maggiore).<br>
+      <b>Convenzione i &lt; j:</b> trasmette se i &lt; j.</p>
+    </div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body">
+      <strong>Ogni nodo riceve cammini dagli altri e li integra nel proprio grafo locale</strong>
+      <p>Se dopo l'integrazione appare un ciclo (un cammino <code>E_X → … → E_X</code>), il deadlock è rilevato.</p>
+    </div></div>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio dai TDE — Esame Febbraio 2024</div>
+    <p><b>Nodo A:</b> E_C → t4 → t7 → t5 → E_B<br>
+    <b>Nodo B:</b> E_A → t5 → t6 → t1 → E_C<br>
+    <b>Nodo C:</b> E_B → t1 → t3 → t2; t3 → t4 → E_A</p>
+    <p><b>Convenzione i &gt; j (trasmette se t_i→t_j con i&gt;j):</b></p>
+    <p>Nodo B: ha E_A→t5→t1→E_C con 5&gt;1 → trasmette <code>E_A→t5→t1→E_C</code> a Nodo A.</p>
+    <p>Nodo A riceve e ora ha <code>E_A→t5→t4→E_A</code>: <b>ciclo rilevato → deadlock!</b></p>
+  </div>
+
+  <div class="box warn">
+    <div class="box-label">Come non sbagliare Obermarck</div>
+    <ul>
+      <li>Tieni traccia di <i>tutti</i> i cammini su ogni nodo, non solo il più lungo.</li>
+      <li>Quando ricevi un cammino esterno, aggiungilo al grafo locale e poi controlla se hai nuovi cammini da trasmettere.</li>
+      <li>Il ciclo si identifica quando vedi <b>E_X → … → E_X</b> sullo stesso nodo X.</li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <div class="box info" style="margin-top:32px">
+    <div class="box-label">Prossimi passi</div>
+    <p>Hai capito la concurrency control? Vai a esercitarti sul <a href="quiz.html">Quiz Arcade</a> (sezione "Concurrency Control") oppure passa alla guida su <a href="guide_ranking.html">Ranking &amp; Skyline</a>.</p>
+  </div>
+
+  <footer>DB2 Politecnico · Guida Concurrency Control</footer>
+</main>
+</div>
+</body>
+</html>
