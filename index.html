@@ -786,16 +786,22 @@ Questo è voluto: Obermarck accumula <b>conoscenza distribuita</b> tramite i mes
 <h3 class="gsub">Algoritmo SFS (Sorted Filter Skyline)</h3>
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
-  <strong>Ordina il dataset per il primo attributo (poi il secondo come tiebreak)</strong>
-  <p>Metti prima chi ha valore più alto sul primo attributo.</p>
+  <strong>Ordina il dataset con una funzione monotona</strong>
+  <p>La funzione deve garantire che se P domina Q, allora P venga prima di Q nell'ordinamento. Hai due opzioni equivalenti:</p>
+  <table class="gtbl" style="margin-top:8px">
+  <tr><th>Approccio</th><th>Come si fa</th><th>Quando è comodo</th></tr>
+  <tr><td><b>Somma</b></td><td>Calcola a₁+a₂+…+aₙ per ogni elemento, ordina per somma</td><td>Con 3+ attributi — dai un solo numero a ogni elemento</td></tr>
+  <tr><td><b>Lessicografico</b></td><td>Ordina per il primo attributo, usa il secondo come tiebreak, poi il terzo, ecc.</td><td>Con 2 attributi — immediato a mente</td></tr>
+  </table>
+  <p style="margin-top:8px;font-size:12.5px;color:var(--ink-soft)">Entrambi sono validi perché entrambi sono funzioni monotone. Se gli attributi sono "higher is better" ordini in modo decrescente; se "lower is better" in modo crescente. Se sono misti, prima inverti quelli "higher is better" (es. max−valore) così diventano tutti della stessa direzione.</p>
 </div></div>
 <div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
   <strong>Il primo elemento entra sempre nello skyline</strong>
-  <p>Nessuno può dominarlo sul primo attributo.</p>
+  <p>Per costruzione dell'ordinamento, il primo elemento non può essere dominato da nessuno che viene dopo.</p>
 </div></div>
 <div class="gstep"><div class="gstep-n" style="background:var(--rank)"></div><div class="gstep-b">
   <strong>Per ogni elemento successivo: controlla la dominanza rispetto a tutti i già-skyline</strong>
-  <p>Se anche <b>uno solo</b> dei già-skyline lo domina → fuori. Altrimenti → entra nello skyline.</p>
+  <p>Se anche <b>uno solo</b> dei già-skyline lo domina su <b>tutti</b> gli attributi → fuori. Altrimenti → entra nello skyline. Con N attributi controlli semplicemente tutte le N dimensioni.</p>
 </div></div>
 </div>
 
