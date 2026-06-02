@@ -80,12 +80,13 @@
     <li><a href="#skyband">3. k-skyband</a></li>
     <li><a href="#topk-mono">4. Top-k e funzioni monotone</a></li>
     <li><span class="nav-section">Algoritmi Top-k distribuiti</span></li>
-    <li><a href="#fa">5. Fagin's Algorithm (FA)</a></li>
-    <li><a href="#ta">6. Threshold Algorithm (TA)</a></li>
-    <li><a href="#nra">7. NRA</a></li>
-    <li><a href="#confronto">8. Confronto FA vs TA vs NRA</a></li>
-    <li><a href="#nonmonotone">9. Funzioni non monotone</a></li>
-    <li><a href="#coeff-negativo">10. Coefficiente negativo (liste in ordine diverso)</a></li>
+    <li><a href="#accessi">5. Tipi di accesso e Depth</a></li>
+    <li><a href="#fa">6. Fagin's Algorithm (FA)</a></li>
+    <li><a href="#ta">7. Threshold Algorithm (TA)</a></li>
+    <li><a href="#nra">8. NRA</a></li>
+    <li><a href="#confronto">9. Confronto FA vs TA vs NRA</a></li>
+    <li><a href="#nonmonotone">10. Funzioni non monotone</a></li>
+    <li><a href="#coeff-negativo">11. Coefficiente negativo (liste in ordine diverso)</a></li>
     <li><span class="nav-section">Navigazione</span></li>
   </ul>
   <div class="nav-links">
@@ -195,9 +196,49 @@
 
   <hr class="divider">
 
+  <!-- ACCESSI E DEPTH -->
+  <h2 id="accessi">5. Tipi di accesso e Depth</h2>
+  <p>Prima di vedere FA e TA, è fondamentale capire i tre concetti chiave per contare i costi degli algoritmi:</p>
+
+  <div class="box info">
+    <div class="box-label">Accesso Ordinato (Sorted Access — s.a.)</div>
+    <p><b>Definizione:</b> leggere il <b>prossimo elemento</b> in una lista, nell'ordine in cui è già ordinata (dal migliore al peggiore).</p>
+    <p>È come sfogliare un elenco dall'alto verso il basso: ogni s.a. ti dà l'elemento successivo. <b>Ogni lista ha il suo contatore</b>: se fai 3 round, hai fatto 3 s.a. per lista.</p>
+    <p><b>Costo:</b> tipicamente economico (lettura sequenziale).</p>
+  </div>
+
+  <div class="box warn">
+    <div class="box-label">Accesso Casuale (Random Access — r.a.)</div>
+    <p><b>Definizione:</b> data una lista e un elemento specifico, <b>chiedi direttamente il valore</b> di quell'elemento in quella lista.</p>
+    <p>Esempio: "quanto vale MMIN per l'elemento g?" → r.a. sulla lista MMIN per g.</p>
+    <p><b>Costo:</b> tipicamente più costoso di un s.a. (richiede una lookup puntuale). NRA non usa mai r.a. proprio per questo motivo.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="box-label">Depth</div>
+    <p><b>Definizione:</b> il numero di <b>round di accessi ordinati</b> eseguiti, cioè quante righe si sono lette da ciascuna lista prima di fermarsi.</p>
+    <p>Se hai m liste e depth = d, hai fatto <b>d × m accessi ordinati</b> in totale (d righe per ognuna delle m liste).</p>
+    <p><b>Nel TDE</b> ti chiedono spesso di indicare depth, sorted e random. Il conteggio è:</p>
+    <ul>
+      <li><b>depth</b> = numero di round (righe lette per lista)</li>
+      <li><b>sorted</b> = depth × numero di liste (totale s.a.)</li>
+      <li><b>random</b> = numero di r.a. fatti per completare gli score degli elementi visti</li>
+    </ul>
+  </div>
+
+  <div class="box ex">
+    <div class="box-label">Esempio — 4 liste, depth=2</div>
+    <p>Con 4 liste e depth=2:<br>
+    <b>sorted = 2 × 4 = 8</b> accessi ordinati.<br>
+    Se al round 1 hai visto 4 elementi nuovi e per ognuno hai fatto 3 r.a. (completare le 3 liste mancanti), e al round 2 hai visto 2 nuovi con 3 r.a. ciascuno:<br>
+    <b>random = 4×3 + 2×3 = 18</b>. Ma se un elemento appare in più liste nello stesso round, i r.a. necessari sono di meno (hai già quel valore).</p>
+  </div>
+
+  <hr class="divider">
+
   <!-- FA -->
-  <h2 id="fa">5. Fagin's Algorithm (FA)</h2>
-  <p>FA è usato quando i dati sono su più server, ognuno ordinato per un attributo diverso. Ogni server può rispondere a due tipi di query:</p>
+  <h2 id="fa">6. Fagin's Algorithm (FA)</h2>
+  <p>FA è usato quando i dati sono su più server, ognuno ordinato per un attributo diverso. Usa sia accessi ordinati che casuali:</p>
   <ul>
     <li><b>Accesso ordinato (s.a.)</b>: "dammi il prossimo elemento nella tua lista" (leggo in ordine)</li>
     <li><b>Accesso casuale (r.a.)</b>: "dammi il valore di x per l'elemento y" (leggo un elemento specifico)</li>
@@ -244,7 +285,7 @@
   <hr class="divider">
 
   <!-- TA -->
-  <h2 id="ta">6. Threshold Algorithm (TA)</h2>
+  <h2 id="ta">7. Threshold Algorithm (TA)</h2>
   <p>TA è più intelligente di FA: usa una <b>soglia (threshold)</b> per decidere quando fermarsi prima, senza dover aspettare k elementi comuni.</p>
 
   <h3>Come funziona TA</h3>
@@ -284,7 +325,7 @@
   <hr class="divider">
 
   <!-- NRA -->
-  <h2 id="nra">7. NRA — No Random Access</h2>
+  <h2 id="nra">8. NRA — No Random Access</h2>
   <p>NRA è usato quando gli <b>accessi casuali non sono disponibili</b> (es. API che non permette query dirette). Usa solo accessi ordinati, ma deve stimare i punteggi con un intervallo [lb, ub].</p>
 
   <h3>Come funziona NRA</h3>
@@ -320,7 +361,7 @@
   <hr class="divider">
 
   <!-- CONFRONTO -->
-  <h2 id="confronto">8. Confronto FA vs TA vs NRA</h2>
+  <h2 id="confronto">9. Confronto FA vs TA vs NRA</h2>
   <table class="tbl">
     <tr><th>Algoritmo</th><th>Accessi ordinati</th><th>Accessi casuali</th><th>Quando si ferma</th><th>Corretto se</th></tr>
     <tr><td><b>FA</b></td><td>Fino a k comuni</td><td>Sì (nella fase 2)</td><td>k elementi comuni</td><td>f monotona</td></tr>
@@ -335,7 +376,7 @@
   <hr class="divider">
 
   <!-- NON MONOTONE -->
-  <h2 id="nonmonotone">9. Funzioni non monotone — Quando FA e TA falliscono</h2>
+  <h2 id="nonmonotone">10. Funzioni non monotone — Quando FA e TA falliscono</h2>
   <p>FA e TA assumono che la funzione di scoring sia <b>monotona</b>. Se non lo è, possono dare risultati <b>sbagliati</b>.</p>
 
   <div class="box danger">
@@ -349,7 +390,7 @@
     <p>Una funzione f(x1,…,xm) è monotona se: aumentare qualsiasi xi (tenendo fissi gli altri) non diminuisce mai il valore di f. Funzioni non monotone tipiche: deviazione standard, distanza dalla bisettrice, funzioni con "bilanciamento" tra attributi.</p>
   </div>
 
-  <h2 id="coeff-negativo">10. Coefficiente negativo — TA con liste in ordine diverso</h2>
+  <h2 id="coeff-negativo">11. Coefficiente negativo — TA con liste in ordine diverso</h2>
   <p>A volte la funzione di scoring ha un <b>coefficiente negativo</b> davanti a un attributo: per quell'attributo, <b>valori più bassi sono migliori</b>. In questo caso TA si può comunque applicare, ma la lista di quell'attributo va ordinata in <b>ordine crescente</b> (dal più basso al più alto), non decrescente.</p>
 
   <div class="box warn">
