@@ -1100,6 +1100,19 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <p><b>SELECT INTO var</b> assegna il risultato a una variabile locale — funziona solo se la query ritorna esattamente una riga. Se ritorna zero righe la variabile rimane NULL; se ritorna più righe va in errore. Usa sempre una query con WHERE sulla PK o con COUNT()/SUM() per essere sicuro.</p>
 </div>
 
+<h3 class="gsub">COALESCE — il primo valore non NULL</h3>
+<p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px"><b>COALESCE(v1, v2, v3, ...)</b> ritorna il primo argomento che non è NULL. Se tutti sono NULL ritorna NULL.</p>
+<div class="gcode"><span class="gcm">-- se salary è NULL usa 0 come fallback</span>
+<span class="kw">COALESCE</span>(NEW.salary, 0)
+
+<span class="gcm">-- utile negli UPDATE quando la variabile può essere NULL</span>
+<span class="kw">UPDATE</span> PROJECTS_INCOME
+<span class="kw">SET</span> perCapitaAmt = totAmt / <span class="kw">COALESCE</span>(emp_count, 1)
+<span class="kw">WHERE</span> deptID = OLD.deptID;</div>
+<div class="gbox info"><div class="gbox-label">Quando si usa nei trigger</div>
+<p>Tipico quando hai fatto <b>SELECT COUNT(*) INTO var</b> e vuoi evitare una divisione per NULL/0, oppure quando NEW.col potrebbe essere NULL e devi fornire un valore di default. Esempio: <code style="font-size:12px">COALESCE(NEW.bonus, 0)</code> invece di scrivere un IF separato.</p>
+</div>
+
 <h3 class="gsub">IF / THEN / ELSEIF / ELSE</h3>
 <div class="gcode"><span class="kw">IF</span> condizione1 <span class="kw">THEN</span>
   <span class="gcm">-- azione 1</span>
