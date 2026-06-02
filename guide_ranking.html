@@ -85,6 +85,7 @@
     <li><a href="#nra">7. NRA</a></li>
     <li><a href="#confronto">8. Confronto FA vs TA vs NRA</a></li>
     <li><a href="#nonmonotone">9. Funzioni non monotone</a></li>
+    <li><a href="#coeff-negativo">10. Coefficiente negativo (liste in ordine diverso)</a></li>
     <li><span class="nav-section">Navigazione</span></li>
   </ul>
   <div class="nav-links">
@@ -346,6 +347,36 @@
   <div class="box warn">
     <div class="box-label">Come riconoscere una funzione non monotona</div>
     <p>Una funzione f(x1,…,xm) è monotona se: aumentare qualsiasi xi (tenendo fissi gli altri) non diminuisce mai il valore di f. Funzioni non monotone tipiche: deviazione standard, distanza dalla bisettrice, funzioni con "bilanciamento" tra attributi.</p>
+  </div>
+
+  <h2 id="coeff-negativo">10. Coefficiente negativo — TA con liste in ordine diverso</h2>
+  <p>A volte la funzione di scoring ha un <b>coefficiente negativo</b> davanti a un attributo: per quell'attributo, <b>valori più bassi sono migliori</b>. In questo caso TA si può comunque applicare, ma la lista di quell'attributo va ordinata in <b>ordine crescente</b> (dal più basso al più alto), non decrescente.</p>
+
+  <div class="box warn">
+    <div class="box-label">Perché funziona</div>
+    <p>TA richiede che la funzione sia <b>monotona rispetto alle liste ordinate</b>: scendendo in ogni lista, il contributo di quell'attributo allo score deve diminuire. Se un attributo ha coefficiente negativo (es. <code>-100t.MYCT</code>), il suo contributo diminuisce quando MYCT <b>aumenta</b>. Ordinando la lista in modo crescente (valori piccoli = migliori in cima), scendendo nella lista il contributo cala, e la monotonia è rispettata.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="box-label">Esempio — Esame 2 Luglio 2025</div>
+    <p>Funzione di scoring: <code>erp(t) = <b>-100t</b>.MYCT + 10t.MMIN + t.MMAX + t.CACH</code></p>
+    <p>MYCT (machine cycle time) ha coefficiente <b>-100</b>: più basso è MYCT, meglio è (meno tempo di ciclo = CPU più veloce).</p>
+    <ul>
+      <li><b>MMIN, MMAX, CACH</b>: coefficiente positivo → liste ordinate in modo <b>decrescente</b> (il più alto in cima)</li>
+      <li><b>MYCT</b>: coefficiente negativo → lista ordinata in modo <b>crescente</b> (il più basso in cima)</li>
+    </ul>
+    <p>Con questo adattamento, TA funziona normalmente: la soglia τ al round i si calcola come <code>τ = -100·MYCT_i + 10·MMIN_i + MMAX_i + CACH_i</code> dove ogni valore è l'ultimo letto nella rispettiva lista ordinata. Quando il top-1 nel buffer ha score ≥ τ, ci si ferma.</p>
+  </div>
+
+  <div class="box info">
+    <div class="box-label">Regola pratica per il TDE</div>
+    <p>Quando vedi un <b>segno meno</b> davanti a un attributo nella funzione di scoring:</p>
+    <ol style="padding-left:20px;margin-top:6px">
+      <li>Ordina quella lista in modo <b>crescente</b> (invece che decrescente)</li>
+      <li>TA si applica normalmente: calcola soglia, fai accessi casuali, confronta</li>
+      <li>La funzione rimane <b>monotona rispetto alle liste ordinate</b></li>
+    </ol>
+    <p style="margin-top:8px"><b>Attenzione:</b> questo NON è il caso di una funzione non monotona (sezione 9). Una funzione con coefficiente negativo è comunque monotona — basta invertire l'ordine della lista.</p>
   </div>
 
   <div class="box info" style="margin-top:32px">
