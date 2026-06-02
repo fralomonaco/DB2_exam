@@ -172,25 +172,6 @@
   </div>
 
   <div class="box example">
-    <div class="box-label">Esempio SFS — TDE Luglio 2025 (CPU dataset)</div>
-    <p>Dati CPU con <b>MYCT</b> (lower is better), <b>MMIN, MMAX, CACH</b> (higher is better).<br>
-    f = MMIN + MMAX + CACH − MYCT. Tabella ordinata per f decrescente:</p>
-    <table class="tbl">
-      <tr><th>#</th><th>CPU</th><th>MYCT ↓</th><th>MMIN ↑</th><th>MMAX ↑</th><th>CACH ↑</th><th>f</th><th>Skyline?</th><th>Motivo</th></tr>
-      <tr><td>1</td><td><b>b</b></td><td>29</td><td>8000</td><td>32000</td><td>32</td><td>40003</td><td class="ok">SÌ</td><td>Primo, sempre in skyline</td></tr>
-      <tr><td>2</td><td><b>d</b></td><td>60</td><td>2000</td><td>8000</td><td>65</td><td>10005</td><td class="ok">SÌ</td><td>b non domina d (CACH: 32 &lt; 65)</td></tr>
-      <tr><td>3</td><td><b>a</b></td><td>125</td><td>256</td><td>6000</td><td>256</td><td>6387</td><td class="ok">SÌ</td><td>b,d non dominano a (CACH: 32,65 &lt; 256)</td></tr>
-      <tr><td>4</td><td>h</td><td>50</td><td>1000</td><td>4000</td><td>8</td><td>4958</td><td class="no">NO</td><td>b domina h (29≤50, 8000≥1000, 32000≥4000, 32≥8)</td></tr>
-      <tr><td>5</td><td><b>g</b></td><td>25</td><td>1310</td><td>2620</td><td>131</td><td>4036</td><td class="ok">SÌ</td><td>Nessuno domina g (MYCT=25, nessuno ha ≤25)</td></tr>
-      <tr><td>6</td><td>c</td><td>400</td><td>1000</td><td>3000</td><td>0</td><td>3600</td><td class="no">NO</td><td>b domina c su tutto</td></tr>
-      <tr><td>7</td><td>f</td><td>167</td><td>524</td><td>2000</td><td>8</td><td>2365</td><td class="no">NO</td><td>b domina f su tutto</td></tr>
-      <tr><td>8</td><td>e</td><td>350</td><td>64</td><td>64</td><td>0</td><td>−222</td><td class="no">NO</td><td>b domina e su tutto</td></tr>
-    </table>
-    <p><b>Skyline = {b, d, a, g}</b></p>
-    <p style="font-size:12.5px;color:var(--soft)">Nota: ↓ = lower is better, ↑ = higher is better. Per la dominanza, MYCT usa ≤ (il più basso vince), gli altri ≥ (il più alto vince).</p>
-  </div>
-
-  <div class="box example">
     <div class="box-label">Esempio dai TDE — Esame Gennaio 2025 (Hotel)</div>
     <p>Dataset ordinato per distanza train station (ts, lower-is-better), poi concert hall (ch):</p>
     <table class="tbl">
