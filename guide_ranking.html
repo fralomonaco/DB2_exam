@@ -113,6 +113,19 @@
   <p>Un elemento <b>a domina b</b> (scriviamo <code>a ≺ b</code>) se <b>a è almeno buono quanto b su tutti gli attributi</b> e <b>strettamente migliore su almeno uno</b>.</p>
   <p>Importante: la "bontà" dipende dal contesto. Agli esami del Poli, i valori <b>più alti sono migliori</b> salvo diversa indicazione.</p>
 
+  <div class="box danger">
+    <div class="box-label">Attenzione: attributi con direzioni diverse (es. TDE Luglio 2025)</div>
+    <p>Se un attributo è <b>"lower is better"</b> (es. MYCT = tempo di ciclo: meno è meglio), la dominanza si inverte <b>solo per quell'attributo</b>:</p>
+    <ul>
+      <li>Per attributi <b>higher is better</b>: a domina b se <code>a.val ≥ b.val</code></li>
+      <li>Per attributi <b>lower is better</b>: a domina b se <code>a.val ≤ b.val</code> (il valore più basso è migliore!)</li>
+    </ul>
+    <p><b>Esempio:</b> CPU g (MYCT=25, CACH=131) vs CPU h (MYCT=50, CACH=8).<br>
+    MYCT lower is better: g=25 ≤ h=50 ✓ (g migliore)<br>
+    CACH higher is better: g=131 ≥ h=8 ✓ (g migliore)<br>
+    → <b>g domina h</b>.</p>
+  </div>
+
   <div class="box example">
     <div class="box-label">Esempio concreto</div>
     <p>Hotel A: distanza 0.3 km, prezzo 80€/notte<br>
@@ -145,6 +158,17 @@
       <strong>Continua fino alla fine del dataset</strong>
       <p>Grazie all'ordinamento, un elemento con rank k sul primo attributo non può dominare elementi con rank &lt; k: questo permette a SFS di essere efficiente.</p>
     </div></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-label">SFS con attributi in direzioni diverse — Come ordinare</div>
+    <p>Se gli attributi hanno direzioni miste (alcuni "higher is better", altri "lower is better"), per SFS devi usare una <b>funzione monotona di scoring</b> che rispetti tutte le direzioni:</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:13px;margin:8px 0;padding:10px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--dc)">
+      f = <b>+</b> attributi "higher is better" <b>−</b> attributi "lower is better"
+    </p>
+    <p><b>Esempio TDE Luglio 2025:</b> MYCT (lower is better), MMIN/MMAX/CACH (higher is better).<br>
+    Funzione SFS: <code>f = MMIN + MMAX + CACH <b>− MYCT</b></code><br>
+    Ordina per f decrescente, poi procedi con la dominanza normale (ricordando che per MYCT il valore più basso domina).</p>
   </div>
 
   <div class="box example">
