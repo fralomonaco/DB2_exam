@@ -151,6 +151,14 @@
     "Hash index su PassengerId con costo di overflow 1.3" → cercare un PassengerId = <b>1.3 accessi medi</b>.</p>
   </div>
 
+  <div class="box warn">
+    <div class="box-label">Hash come punto di partenza (secondaria)</div>
+    <p>Se la hash è <b>secondaria</b> (indice separato dai dati), il bucket ti dà solo <b>puntatori</b>, non i dati. Devi aggiungere 1 I/O per tupla per seguire ogni puntatore.</p>
+    <p><b>Esempio:</b> Hash secondaria su Singer, val(Singer)=100, 800 tuple totali.<br>
+    Cerco "Taylor Swift": <code>1 (hash lookup) + 800/100 (= 8 puntatori da seguire) = <b>9 I/O</b></code><br>
+    Confronta con full scan B+ primario (30 foglie): la hash conviene solo se le tuple filtrate sono poche.</p>
+  </div>
+
   <hr class="divider">
 
   <!-- SEQ -->
@@ -381,6 +389,66 @@
   </div>
 
   <p>Confrontato con la scansione diretta di Event (5K I/O + 4 * 4 = 5016 I/O), la scansione sequenziale è più efficiente! L'indice su Date non aiuta in questo caso perché le tuple selezionate sono comunque sparse.</p>
+
+  <hr class="divider">
+
+  <h3>TDE Giugno 2025 — Concert + Ticket (Hash, Caching, B+ Composto)</h3>
+  <div class="box example">
+    <div class="box-label">Schema</div>
+    <p>Concert (800 tuple, B+ primario su ConcertName, 2 livelli, 30 foglie). val(Singer)=100.<br>
+    Ticket (500K tuple, 20K blocchi, entry-sequenced, 8 anni di dati). val(PurchaseDate)=2000.<br>
+    Query: <code>SELECT ConcertName, COUNT(*) FROM Concert JOIN Ticket ... WHERE Singer='Taylor Swift' AND PurchaseDate nel 2024 GROUP BY ConcertName</code></p>
+  </div>
+
+  <p><b>Scenario 1 — Solo strutture base (no indici aggiuntivi):</b></p>
+  <div class="formula">
+    Full scan Concert B+ primario: 1 + 30 = 31
+    Concerti Taylor Swift: 800/100 = 8
+    Per ogni concerto → full scan Ticket: 8 * 20K
+    Totale = 31 + 160K = <b>≈160K I/O</b>
+  </div>
+
+  <p><b>Scenario 2 — Aggiunta hash secondaria su Concert(Singer):</b></p>
+  <div class="formula">
+    Hash lookup "Taylor Swift": 1 I/O
+    Seguire 8 puntatori (hash secondaria!): 8 I/O
+    Per ogni concerto → full scan Ticket: 8 * 20K
+    Totale = 1 + 8 + 160K = <b>≈160K I/O</b>
+  </div>
+
+  <div class="box warn">
+    <div class="box-label">Con e senza caching</div>
+    <p>Se dopo il primo scan di Ticket i 20K blocchi restano in memoria (caching):<br>
+    <code>1 + 8 + 20K = <b>≈20K I/O</b></code> (i restanti 7 scan costano 0)<br><br>
+    Senza caching, ogni scan riparte da zero: <code>1 + 8 + 8 * 20K = <b>≈160K I/O</b></code><br><br>
+    <b>Regola:</b> il caching fa differenza enorme quando riscannerizzi la stessa tabella più volte. Specifica sempre se lo consideri o no.</p>
+  </div>
+
+  <p><b>Scenario 3 — Aggiunta B+ tree su Ticket(PurchaseDate, ConcertName), 3 livelli, 4K foglie:</b></p>
+  <div class="formula">
+    Full scan Concert: 1 + 30 = 31
+    Concerti Taylor Swift: 8
+    Per ogni concerto → B+ tree Ticket:
+      2 livelli intermedi
+      + foglie per anno E concerto: 4K/8 anni/100 concerti ≈ 6 foglie
+    Totale = 1 + 30 + 8 * (2 + 6) = <b>95 I/O</b>
+  </div>
+
+  <div class="box danger">
+    <div class="box-label">B+ tree composto: il secondo attributo "assorbe" la join</div>
+    <p>Il B+ tree è su <b>(PurchaseDate, ConcertName)</b>. Quando cerchi i ticket per un concerto specifico:</p>
+    <ul>
+      <li><b>PurchaseDate</b> = anno 2024 → restringe da 4K a 500 foglie</li>
+      <li><b>ConcertName</b> = nome del concerto dalla join → restringe da 500 a ~6 foglie</li>
+    </ul>
+    <p>Il secondo attributo dell'indice composto fa da <b>filtro gratuito</b> durante la join. Conosci il ConcertName perché viene dalla tabella Concert (il lato esterno della join). Così il B+ composto filtra su entrambi senza costi aggiuntivi.</p>
+    <p><b>Senza ConcertName nell'indice</b> (B+ solo su PurchaseDate): dovresti leggere tutte le 500 foglie dell'anno e poi filtrare → 8 * (2 + 500) = 4016 I/O. Con l'indice composto: 8 * (2 + 6) = 64 I/O. <b>63× più efficiente!</b></p>
+  </div>
+
+  <div class="box info">
+    <div class="box-label">GROUP BY, ORDER BY, LIMIT</div>
+    <p>Queste operazioni avvengono <b>in memoria</b> dopo il recupero dei dati. <b>Non cambiano il costo I/O</b> nel calcolo dell'esame. Ignorale nel conteggio degli accessi.</p>
+  </div>
 
   <div class="box info" style="margin-top:32px">
     <div class="box-label">Prossimi passi</div>
