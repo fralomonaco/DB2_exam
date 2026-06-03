@@ -267,6 +267,10 @@
     <div class="step"><div class="step-num"></div><div class="step-body">
       <strong>Identifica le condizioni di filtro nella WHERE</strong>
       <p>Quali condizioni ci sono? Uguaglianza su chiave? Range? Attributo con indice? Calcola quante tuple sopravvivono a ogni filtro usando val(A).</p>
+      <div class="box danger" style="margin-top:8px">
+        <div class="box-label">Attenzione: controlla ENTRAMBE le tabelle!</div>
+        <p>Un attributo nella WHERE (es. CountryName) potrebbe essere presente in <b>entrambe le tabelle</b> della join. Se filtri su una tabella ma dimentichi che l'attributo è anche nell'altra, sottostimi la selettività. <b>Prima di calcolare, verifica in quale tabella sta ogni attributo della WHERE.</b></p>
+      </div>
     </div></div>
     <div class="step"><div class="step-num"></div><div class="step-body">
       <strong>Parti dalla tabella con il filtro più selettivo</strong>
@@ -275,6 +279,12 @@
     <div class="step"><div class="step-num"></div><div class="step-body">
       <strong>Per il join: usa l'indice sulla tabella interna</strong>
       <p>Dopo aver filtrato la prima tabella, per ogni tupla risultante cerca le tuple corrispondenti nella seconda tabella usando il suo indice (B+ o hash sul join attribute). Costo = t(prime tuple) * costo_lookup_index.</p>
+      <div class="box warn" style="margin-top:8px">
+        <div class="box-label">Lookup puntuale vs scan nella join</div>
+        <p>Se hai <b>già filtrato</b> l'attributo (es. CountryName='Italy') prima della join, quando vai nell'altra tabella cerchi una <b>specifica tupla</b> → <b>lookup puntuale</b> (es. 4 accessi in un B+ a 4 livelli).<br>
+        Se invece <b>non hai filtrato</b> quell'attributo e stai cercando "tutte le tuple che matchano", devi fare uno <b>scan delle foglie</b> rilevanti (es. 3 + 13 foglie per tutte le città italiane).<br>
+        Non confonderli: lookup puntuale = livelli del B+, scan = livelli + foglie contigue.</p>
+      </div>
     </div></div>
     <div class="step"><div class="step-num"></div><div class="step-body">
       <strong>Calcola il costo totale e confronta piani alternativi</strong>
