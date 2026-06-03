@@ -282,6 +282,30 @@
     </div></div>
   </div>
 
+  <div class="box danger">
+    <div class="box-label">Regola fondamentale: quando usare BLOCCHI vs TUPLE nel calcolo dei costi</div>
+    <p>Questo è un punto che crea confusione. La regola è semplice:</p>
+    <ul>
+      <li><b>BLOCCHI</b> → quando fai uno <b>scan sequenziale</b> su una struttura ordinata. Le tuple sono fisicamente contigue, quindi leggi blocchi interi uno dopo l'altro. Il costo è il numero di blocchi, non di tuple.<br>
+      Esempio: struttura primaria ordinata su (Discipline, Score). Per leggere tutti i "ski jumping" con score ≥ 90: <code>b(R) / val(Discipline) * 0.70</code> = blocchi contigui da scorrere.</li>
+      <li><b>TUPLE</b> → quando fai <b>lookup puntuali</b> (accessi indipendenti). Ogni tupla genera un accesso separato a una struttura diversa (es. hash table). Non puoi raggruppare per blocchi perché ogni lookup finisce in un posto diverso.<br>
+      Esempio: per ogni tupla trovata, cerco AthleteId nella hash table → <code>t(R) / val(Discipline) * 0.70 * costo_hash</code> = una lookup per tupla.</li>
+    </ul>
+    <p><b>In sintesi:</b> scan contiguo = blocchi, lookup puntuale = tuple.</p>
+  </div>
+
+  <div class="box example">
+    <div class="box-label">Esempio concreto — TDE Febbraio 2026</div>
+    <p>Result: 120K tuple, 6K blocchi, struttura primaria ordinata su (Discipline, Score). B+ secondario su (Discipline, Score), 3 livelli, 600 foglie.<br>
+    Athlete: 40K tuple, hash primaria su AthleteId, 2K blocchi + 0.4K overflow (costo lookup = 1.2).<br>
+    Query: <code>WHERE Discipline='ski jumping' AND Score≥90</code>, join su AthleteId.</p>
+    <p><b>Parte 1 — Scan Result (BLOCCHI):</b> la struttura primaria è ordinata, quindi le tuple di ski jumping con score≥90 sono contigue.<br>
+    <code>3 (traversal B+) + 6K/20 * 0.70 = 3 + 210 blocchi</code></p>
+    <p><b>Parte 2 — Join con Athlete (TUPLE):</b> per ogni singola tupla trovata, faccio un lookup hash indipendente.<br>
+    <code>120K/20 * 0.70 * 1.2 = 4200 * 1.2 = 5040 lookup</code></p>
+    <p><b>Totale: 3 + 210 + 5040 = 5253 I/O</b></p>
+  </div>
+
   <hr class="divider">
 
   <!-- ESEMPI -->
