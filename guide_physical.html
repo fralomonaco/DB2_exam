@@ -364,6 +364,22 @@
     Per ogni match → lookup su City B+: 4 * (3+1) = 16 I/O
     Totale = 2 + 12 + 10K + 16 = <b>≈10.030 I/O</b>
   </div>
+  <div class="box danger">
+    <div class="box-label">Perché il secondario aggiunge 10K accessi? Primario vs Secondario</div>
+    <p>Questa è una differenza cruciale:</p>
+    <ul>
+      <li><b>B+ primario</b>: i dati sono <b>fisicamente nelle foglie</b> (o ordinati come le foglie). Quando scannerizzi le foglie, <b>hai già i dati</b>. Costo = livelli intermedi + foglie. Basta.</li>
+      <li><b>B+ secondario</b>: le foglie contengono solo <b>chiave + puntatore</b>, NON i dati. Dopo aver scansionato le foglie devi <b>seguire ogni puntatore</b> (1 I/O per tupla) per leggere la tupla effettiva dalla struttura primaria.</li>
+    </ul>
+    <p><b>Ecco perché:</b></p>
+    <ul>
+      <li>B+ primario: <code>livelli_intermedi + foglie_rilevanti</code> → ragioni a <b>blocchi</b></li>
+      <li>B+ secondario: <code>livelli_intermedi + foglie_rilevanti + <b>tuple_puntate</b></code> → aggiungi <b>1 accesso per tupla</b></li>
+    </ul>
+    <p>Nell'esempio: 12 foglie contengono 10K puntatori. Ogni puntatore porta a un blocco diverso (Event è disordinato) → <b>10K accessi extra</b>. Per questo un secondario può essere <b>peggio</b> di un full scan quando la selettività è bassa!</p>
+    <p><b>Nota sui livelli:</b> in un B+ a 3 livelli, ci sono 2 livelli intermedi + 1 livello foglie. Si scrive <code>2 + foglie</code> (non 3 + foglie) perché il terzo livello È la foglia che già conti.</p>
+  </div>
+
   <p>Confrontato con la scansione diretta di Event (5K I/O + 4 * 4 = 5016 I/O), la scansione sequenziale è più efficiente! L'indice su Date non aiuta in questo caso perché le tuple selezionate sono comunque sparse.</p>
 
   <div class="box info" style="margin-top:32px">
