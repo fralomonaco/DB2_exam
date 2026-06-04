@@ -91,6 +91,7 @@
     <li><span class="nav-section">Esempi</span></li>
     <li><a href="#ex-library">9. Esempio: Library</a></li>
     <li><a href="#ex-movie">10. Esempio: Movie/Artist</a></li>
+    <li><a href="#ex-tde2026">11. Esempio: TDE Gen 2026</a></li>
     <li><span class="nav-section">Navigazione</span></li>
   </ul>
   <div class="nav-links">
@@ -170,6 +171,13 @@
 
   <p><b>Il lato non-owner</b> deve specificare <code>mappedBy = "nomeAttributo"</code> dove <code>nomeAttributo</code> è il nome dell'attributo nell'entità owner che punta a questa relazione.</p>
 
+  <div class="box danger">
+    <div class="box-label">Regola semplice per mappedBy</div>
+    <p><b>"Come mi chiamo io, visto dall'altra classe?"</b></p>
+    <p>Se l'owner (l'altra classe) ha scritto <code>private Author <b>pippo</b></code>, allora tu scrivi <code>mappedBy = "pippo"</code>.</p>
+    <p>In pratica: vai nella classe owner, guarda il nome del campo che si riferisce a te, e mettilo nel mappedBy.</p>
+  </div>
+
   <div class="box example">
     <div class="box-label">Esempio: Libro - Autore (Many-to-One)</div>
     <p>La tabella Book ha la colonna FK <code>author_id</code>. Quindi Book è l'<b>owner</b> della relazione.</p>
@@ -179,23 +187,37 @@
 <span class="kw">public class</span> <span class="type">Book</span> {
   <span class="ann">@ManyToOne</span>
   <span class="ann">@JoinColumn</span>(name = <span class="str">"author_id"</span>)  <span class="cm">// nome della FK nel DB</span>
-  <span class="kw">private</span> <span class="type">Author</span> author;  <span class="cm">// owner</span>
+  <span class="kw">private</span> <span class="type">Author</span> author;  <span class="cm">// owner: ha @JoinColumn, NO mappedBy</span>
 }
 
 <span class="cm">// Author è il lato NON-owner: usa mappedBy</span>
 <span class="ann">@Entity</span>
 <span class="kw">public class</span> <span class="type">Author</span> {
-  <span class="ann">@OneToMany</span>(mappedBy = <span class="str">"author"</span>)  <span class="cm">// "author" = nome campo in Book</span>
+  <span class="ann">@OneToMany</span>(mappedBy = <span class="str">"author"</span>)  <span class="cm">// "author" = nome del campo in Book che punta a me</span>
   <span class="kw">private</span> List&lt;<span class="type">Book</span>&gt; books;
 }</pre>
+  </div>
+
+  <div class="box warn">
+    <div class="box-label">Attenzione: chi ha l'annotazione?</div>
+    <p>Ogni relazione bidirezionale ha <b>due annotazioni</b>, una per classe. Quando la traccia dice "Relazione Author → Profile", intende l'annotazione scritta <b>dentro la classe Author</b>, sul campo <code>profile</code>.</p>
+    <table class="tbl" style="font-size:12.5px">
+      <tr><th>Direzione nella tabella</th><th>Annotazione scritta in...</th><th>Sul campo...</th></tr>
+      <tr><td>Author → Profile</td><td>classe <b>Author</b></td><td><code>private AuthorProfile profile</code></td></tr>
+      <tr><td>Profile → Author</td><td>classe <b>AuthorProfile</b></td><td><code>private Author author</code></td></tr>
+      <tr><td>Keyword → Article</td><td>classe <b>Keyword</b></td><td><code>private List&lt;Article&gt; articles</code></td></tr>
+      <tr><td>Author → Article</td><td>classe <b>Author</b></td><td><code>private List&lt;Article&gt; articles</code></td></tr>
+    </table>
+    <p style="margin-top:10px"><b>Owner</b> → scrive <code>@JoinColumn</code> (o <code>@JoinTable</code>), niente mappedBy<br>
+    <b>Non-owner</b> → scrive <code>mappedBy = "..."</code>, niente JoinColumn</p>
   </div>
 
   <div class="box blue">
     <div class="box-label">Regola pratica per scegliere l'owner</div>
     <ul>
-      <li><b>@ManyToOne</b>: sempre l'owner è il lato "Many" (ha la FK)</li>
+      <li><b>@ManyToOne / @OneToMany</b>: sempre il lato "Many" è owner (ha la FK)</li>
       <li><b>@ManyToMany</b>: puoi scegliere qualsiasi lato come owner, preferisci il lato più acceduto o quello che rappresenta l'associazione</li>
-      <li><b>@OneToOne</b>: l'owner è il lato che ha la FK (spesso quello con la dipendenza funzionale)</li>
+      <li><b>@OneToOne</b>: l'owner è il lato che ha la FK (guarda lo schema relazionale: chi ha la colonna FK dell'altro?)</li>
     </ul>
   </div>
 
@@ -250,11 +272,21 @@
   </table>
 
   <div class="box info">
-    <div class="box-label">Regola per l'esame: decidi in base alla cardinalità e all'uso</div>
+    <div class="box-label">Regola veloce: ToOne → EAGER, ToMany → LAZY</div>
+    <p>I <b>default JPA</b> sono già una buona base:<br>
+    <code>@OneToOne</code> e <code>@ManyToOne</code> → <b>EAGER</b> (un singolo oggetto, pochi dati)<br>
+    <code>@OneToMany</code> e <code>@ManyToMany</code> → <b>LAZY</b> (potenzialmente tanti oggetti)</p>
+  </div>
+
+  <div class="box danger">
+    <div class="box-label">Ragionamento del prof: l'effetto moltiplicativo</div>
+    <p>Per decidere se EAGER o LAZY, ragiona su <b>quanti oggetti vengono caricati in totale</b> quando carichi un'entità:</p>
+    <p><b>Esempio:</b> Carichi 1 Author. Se Author → Articles è EAGER e un autore ha ~50 articoli, carichi 50 oggetti. Se anche Article → Keywords è EAGER e ogni articolo ha ~10 keyword, carichi 50 × 10 = <b>500 oggetti</b>. Accettabile.</p>
+    <p>Ma se una keyword è associata a migliaia di articoli e fai Keyword → Articles EAGER: 1 keyword → <b>10.000 articoli</b>. E se ognuno carica le keyword EAGER → 10.000 × 10 = <b>100.000 oggetti</b>. Troppo!</p>
     <ul>
-      <li>Se la collezione ha <b>pochi elementi</b> (es. premi di un artista → ordini di grandezza: decine) → EAGER va bene</li>
-      <li>Se la collezione ha <b>molti elementi</b> (es. tutti i reader di un libro → milioni) → LAZY obbligatorio</li>
-      <li>Se l'applicazione <b>accede sempre</b> quella relazione nella stessa request → EAGER è più efficiente</li>
+      <li>Ordine delle <b>centinaia</b> → EAGER accettabile</li>
+      <li>Ordine delle <b>migliaia o più</b> → LAZY obbligatorio</li>
+      <li>Guarda i numeri della traccia (50k autori, 200k articoli, 2k keyword) e moltiplica le cardinalità medie</li>
     </ul>
   </div>
 
@@ -273,9 +305,25 @@
     <tr><td><code>ALL</code></td><td>Tutte le operazioni</td><td>Usa con cautela: propaga tutto</td></tr>
   </table>
 
+  <div class="box info">
+    <div class="box-label">Cascade è OPZIONALE</div>
+    <p>Non sei obbligato a mettere un cascade. Se non vuoi propagare nessuna operazione, <b>non metti nulla</b>. Cascade è un'aggiunta che scegli solo quando ha senso logico.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="box-label">Regola per l'esame: CASCADE.REMOVE</div>
+    <p><b>REMOVE solo se il figlio non può esistere senza il padre</b> (relazione di composizione).</p>
+    <ul>
+      <li>Cancello un Author → cancella il suo Profile (il profilo senza autore non ha senso) → <b>REMOVE</b></li>
+      <li>Cancello un Author → cancella i suoi Articles (gli articoli senza main author non hanno senso) → <b>REMOVE</b></li>
+      <li>Cancello un Article → cancello le Keyword? <b>NO!</b> Le keyword sono usate da altri articoli → <b>nessun cascade</b></li>
+    </ul>
+    <p style="margin-top:8px"><b>Mai CASCADE.REMOVE su @ManyToMany</b> — cancelleresti entità condivise con altre relazioni!</p>
+  </div>
+
   <div class="box warn">
-    <div class="box-label">Quando NON usare CASCADE.REMOVE</div>
-    <p>Se l'entità figlia può esistere indipendentemente dal padre (es. un Libro esiste anche senza Author), non usare REMOVE. Lo usi solo se il figlio non ha senso senza il padre (es. righe di un ordine d'acquisto).</p>
+    <div class="box-label">All'esame: cosa esce di solito</div>
+    <p>Quasi sempre solo <b>REMOVE</b> e a volte <b>PERSIST</b>. MERGE e ALL sono rarissimi nei TDE. Se non sai cosa mettere e l'entità figlia è indipendente, la risposta è <b>"nessun cascade"</b>.</p>
   </div>
 
   <hr class="divider">
@@ -428,6 +476,104 @@
       <li><b>photo LAZY:</b> le foto sono oggetti grandi. Caricarle ogni volta che si carica un Artist appesantirebbe tutte le query. Si caricano solo quando l'utente vede la pagina del singolo artista.</li>
     </ul>
   </div>
+
+  <hr class="divider">
+
+  <!-- EXAMPLE TDE JAN 2026 -->
+  <h2 id="ex-tde2026">11. Esempio — Author/Article/Keyword (TDE Gennaio 2026)</h2>
+  <p>Schema: Author, AuthorProfile, Article, Keyword, Article_keywords (tabella ponte). 50k autori, 50k profili, 200k articoli, 2k keyword. Un autore ha 1-50 articoli, un articolo ha 5-10 keyword, keyword popolari → migliaia di articoli.</p>
+
+  <h3>Access pattern</h3>
+  <ol>
+    <li>Dato un author_id → carica autore, il suo profilo e i suoi articoli</li>
+    <li>Data una keyword → trova gli articoli taggati → per ogni articolo trova il main author</li>
+    <li>Dato un article_id → carica l'articolo con il main author e le keyword associate</li>
+  </ol>
+
+  <h3>Tabella delle relazioni</h3>
+  <table class="tbl">
+    <tr><th>Relazione</th><th>Required?</th><th>Owner</th><th>FetchType</th><th>Cascade</th><th>Annotazione</th></tr>
+    <tr>
+      <td><b>Author → Profile</b></td>
+      <td class="ok">Sì (pattern 1)</td>
+      <td>AuthorProfile</td>
+      <td class="hl">EAGER</td>
+      <td>REMOVE</td>
+      <td><code>@OneToOne(mappedBy = "author", fetch = EAGER, cascade = REMOVE)</code><br><code>private AuthorProfile profile;</code></td>
+    </tr>
+    <tr>
+      <td><b>Profile → Author</b></td>
+      <td class="no">No</td>
+      <td>AuthorProfile</td>
+      <td class="hl">EAGER</td>
+      <td>None</td>
+      <td><code>@OneToOne(fetch = EAGER) @JoinColumn(name = "author_id")</code><br><code>private Author author;</code></td>
+    </tr>
+    <tr>
+      <td><b>Keyword → Article</b></td>
+      <td class="ok">Sì (pattern 2)</td>
+      <td>Article</td>
+      <td class="ok">LAZY</td>
+      <td>None</td>
+      <td><code>@ManyToMany(mappedBy = "keywords", fetch = LAZY)</code><br><code>private List&lt;Article&gt; articles;</code></td>
+    </tr>
+    <tr>
+      <td><b>Author → Article</b></td>
+      <td class="ok">Sì (pattern 1)</td>
+      <td>Article</td>
+      <td class="ok">LAZY</td>
+      <td>REMOVE</td>
+      <td><code>@OneToMany(mappedBy = "mainAuthor", fetch = LAZY, cascade = REMOVE)</code><br><code>private List&lt;Article&gt; articles;</code></td>
+    </tr>
+  </table>
+
+  <div class="box info">
+    <div class="box-label">Perché mappedBy = "author" e non "profile"?</div>
+    <p>Nella riga Author → Profile, l'annotazione è nella classe Author. Author NON è owner (lo è AuthorProfile). Quindi Author deve scrivere <code>mappedBy</code>. Ma cosa ci mette dentro?</p>
+    <p>Va a guardare la classe AuthorProfile (l'owner) e trova: <code>private Author <b>author</b></code>. Quindi scrive <code>mappedBy = "author"</code>.</p>
+    <p>Stessa logica per Keyword → Article: Keyword non è owner, va a guardare Article e trova <code>private List&lt;Keyword&gt; <b>keywords</b></code>, quindi scrive <code>mappedBy = "keywords"</code>.</p>
+  </div>
+
+  <h3>Motivazioni FetchType</h3>
+  <div class="box example">
+    <div class="box-label">Ragionamento moltiplicativo</div>
+    <ul>
+      <li><b>Author → Profile: EAGER</b> — 1 autore ha al massimo 1 profilo. Carico 1 oggetto extra. OK.</li>
+      <li><b>Profile → Author: EAGER</b> — 1 profilo ha esattamente 1 autore. Carico 1 oggetto extra. OK.</li>
+      <li><b>Keyword → Articles: LAZY</b> — una keyword popolare ha migliaia di articoli. Se EAGER: 1 keyword → 10.000 articoli → e se ogni articolo caricasse le keyword EAGER → 10.000 × 10 = 100.000 oggetti. Troppo!</li>
+      <li><b>Author → Articles: LAZY</b> — un autore ha 1-50 articoli. Di per sé sarebbe EAGER (~50 oggetti), ma la soluzione del prof dice LAZY. Entrambi accettabili, ma LAZY è più sicuro con 200k articoli totali.</li>
+    </ul>
+  </div>
+
+  <h3>Codice dell'entità Article (parte b)</h3>
+<pre><span class="ann">@Entity</span>
+<span class="kw">public class</span> <span class="type">Article</span> {
+
+  <span class="ann">@Id</span>
+  <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+  <span class="kw">private</span> Long article_id;
+  <span class="kw">private</span> String title;
+  <span class="ann">@Temporal</span>(TemporalType.DATE)
+  <span class="kw">private</span> Date publicationDate;
+
+  <span class="cm">// N:1 verso Author (main author) — Article è OWNER</span>
+  <span class="cm">// Needed for pattern #3</span>
+  <span class="cm">// No cascade: più articoli possono avere lo stesso main author</span>
+  <span class="ann">@ManyToOne</span>(fetch = FetchType.EAGER)  <span class="cm">// 1 solo autore, sempre servito</span>
+  <span class="ann">@JoinColumn</span>(name = <span class="str">"main_author_id"</span>)
+  <span class="kw">private</span> <span class="type">Author</span> mainAuthor;
+
+  <span class="cm">// M:N verso Keyword — Article è OWNER</span>
+  <span class="cm">// Needed for pattern #3</span>
+  <span class="cm">// No cascade: N:M, le keyword sono condivise</span>
+  <span class="ann">@ManyToMany</span>(fetch = FetchType.EAGER)  <span class="cm">// solo 5-10 keyword per articolo</span>
+  <span class="ann">@JoinTable</span>(
+    name = <span class="str">"article_keywords"</span>,
+    joinColumns = <span class="ann">@JoinColumn</span>(name = <span class="str">"article_id"</span>),
+    inverseJoinColumns = <span class="ann">@JoinColumn</span>(name = <span class="str">"keyword_id"</span>)
+  )
+  <span class="kw">private</span> List&lt;<span class="type">Keyword</span>&gt; keywords;
+}</pre>
 
   <div class="box info" style="margin-top:32px">
     <div class="box-label">Prossimi passi</div>
