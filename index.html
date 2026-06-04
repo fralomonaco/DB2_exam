@@ -1408,16 +1408,32 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 
 <h3 class="gsub">Owner side e mappedBy</h3>
 <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:10px">L'<b>owner</b> è il lato che controlla la foreign key nel DB. Il lato non-owner usa <b>mappedBy = "nomeAttributo"</b> dove nomeAttributo è il campo nell'entità owner che punta a questa relazione.</p>
+
+<div class="gbox danger"><div class="gbox-label">Regola semplice per mappedBy</div>
+<p><b>"Come mi chiamo io, visto dall'altra classe?"</b></p>
+<p>Se l'owner (l'altra classe) ha scritto <code>private Author <b>pippo</b></code>, tu scrivi <code>mappedBy = "pippo"</code>. Vai nella classe owner, guarda come ti ha chiamato, e metti quel nome.</p>
+</div>
+
 <div class="gcode"><span class="gcm">// Book è OWNER: ha la FK author_id nel DB</span>
+<span class="gcm">// L'owner ha @JoinColumn, MAI mappedBy</span>
 <span class="kw">@ManyToOne</span>
 <span class="kw">@JoinColumn</span>(name = <span class="gstr">"author_id"</span>)
 <span class="kw">private</span> Author author;  <span class="gcm">// owner</span>
 
 <span class="gcm">// Author è NON-owner: usa mappedBy</span>
+<span class="gcm">// Book mi chiama "author" → mappedBy = "author"</span>
 <span class="kw">@OneToMany</span>(mappedBy = <span class="gstr">"author"</span>)
 <span class="kw">private</span> List&lt;Book&gt; books;</div>
-<div class="gbox warn"><div class="gbox-label">Regola per scegliere l'owner</div>
-<ul><li><b>@ManyToOne:</b> sempre il lato "Many" è owner (ha la FK)</li><li><b>@ManyToMany:</b> scegli liberamente; usa @JoinTable sull'owner</li><li><b>@OneToOne:</b> owner = il lato con la FK</li></ul>
+
+<div class="gbox warn"><div class="gbox-label">Chi ha l'annotazione? Come leggere la tabella del TDE</div>
+<p>La traccia dice "Relazione Author → Profile": intende l'annotazione scritta <b>dentro la classe Author</b>, sul campo <code>profile</code>.<br>
+"Relazione Profile → Author": intende l'annotazione scritta <b>dentro AuthorProfile</b>, sul campo <code>author</code>.</p>
+<p><b>Owner</b> → scrive <code>@JoinColumn</code> (o <code>@JoinTable</code>), niente mappedBy<br>
+<b>Non-owner</b> → scrive <code>mappedBy = "..."</code>, niente JoinColumn</p>
+</div>
+
+<div class="gbox info"><div class="gbox-label">Regola per scegliere l'owner</div>
+<ul><li><b>@ManyToOne / @OneToMany:</b> sempre il lato "Many" è owner (ha la FK)</li><li><b>@ManyToMany:</b> scegli liberamente; usa @JoinTable sull'owner</li><li><b>@OneToOne:</b> owner = il lato con la FK (guarda lo schema relazionale)</li></ul>
 </div>
 <div class="gcode"><span class="gcm">// ManyToMany: owner usa @JoinTable</span>
 <span class="kw">@ManyToMany</span>
@@ -1436,10 +1452,17 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <tr><td>EAGER</td><td>Subito, con l'entità principale</td><td>@ManyToOne, @OneToOne</td></tr>
 <tr><td>LAZY</td><td>Solo al primo accesso</td><td>@OneToMany, @ManyToMany</td></tr>
 </table>
-<div class="gbox warn"><div class="gbox-label">Come scegliere agli esami</div>
+<div class="gbox info"><div class="gbox-label">Regola veloce</div>
+<p><b>ToOne → EAGER</b> (un singolo oggetto, pochi dati)<br>
+<b>ToMany → LAZY</b> (potenzialmente tanti oggetti)</p>
+</div>
+
+<div class="gbox danger"><div class="gbox-label">Ragionamento del prof: l'effetto moltiplicativo</div>
+<p>Ragiona su <b>quanti oggetti carichi in totale</b>. Se carichi 1 Author con EAGER verso Articles (50 articoli), e ogni Article ha EAGER verso Keywords (10 keyword): 1 → 50 → 500 oggetti. Accettabile.</p>
+<p>Ma se Keyword → Articles è EAGER e una keyword popolare ha 10.000 articoli, e ogni articolo carica 10 keyword: 10.000 × 10 = <b>100.000 oggetti</b>. Troppo!</p>
 <ul>
-<li>Collezione con <b>pochi elementi</b> (decine/centinaia) sempre mostrati → <b>EAGER</b></li>
-<li>Collezione con <b>molti elementi</b> (migliaia/milioni) → <b>LAZY</b> obbligatorio</li>
+<li>Ordine delle <b>centinaia</b> → EAGER accettabile</li>
+<li>Ordine delle <b>migliaia o più</b> → LAZY obbligatorio</li>
 <li>Campo grande (foto, file binari) → <b>@Lob + LAZY</b></li>
 </ul>
 </div>
@@ -1452,11 +1475,36 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <tr><td>MERGE</td><td>Aggiorna i figli quando aggiorni il padre</td></tr>
 <tr><td>ALL</td><td>Tutte le operazioni</td></tr>
 </table>
-<div class="gbox danger"><div class="gbox-label">Quando NON usare CASCADE.REMOVE</div>
-<p>Se il figlio può esistere senza il padre (es. Libro senza Autore) → non usare REMOVE. Usalo solo per entità dipendenti (es. righe di un ordine).</p>
+
+<div class="gbox info"><div class="gbox-label">Cascade è OPZIONALE</div>
+<p>Non sei obbligato a mettere un cascade. Se non vuoi propagare nulla, <b>non metti niente</b>. All'esame esce quasi sempre solo <b>REMOVE</b> e a volte <b>PERSIST</b>. MERGE e ALL sono rarissimi.</p>
+</div>
+
+<div class="gbox danger"><div class="gbox-label">Regola: CASCADE.REMOVE</div>
+<p><b>REMOVE solo se il figlio non può esistere senza il padre</b> (composizione).</p>
+<ul>
+<li>Cancello Author → cancella il Profile (senza autore non ha senso) → <b>REMOVE</b></li>
+<li>Cancello Author → cancella i suoi Articles → <b>REMOVE</b></li>
+<li>Cancello Article → cancello le Keyword? <b>NO!</b> Sono condivise → <b>nessun cascade</b></li>
+</ul>
+<p><b>Mai CASCADE.REMOVE su @ManyToMany</b> — cancelleresti entità condivise!</p>
 </div>`,
 
-`<div class="gbox ex"><div class="gbox-label">Esempio completo — Movie & Artist (TDE 2023)</div>
+`<div class="gbox ex"><div class="gbox-label">Esempio — Author/Article/Keyword (TDE Gennaio 2026)</div>
+<p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">50k autori, 50k profili, 200k articoli, 2k keyword. Autore: 1-50 articoli. Articolo: 5-10 keyword. Keyword popolari: migliaia di articoli.</p>
+<table class="gtbl" style="font-size:12px">
+<tr><th>Relazione</th><th>Required?</th><th>Owner</th><th>Fetch</th><th>Cascade</th><th>Annotazione</th></tr>
+<tr><td>Author→Profile</td><td style="color:var(--d-low)">Sì (pat.1)</td><td>Profile</td><td>EAGER</td><td>REMOVE</td><td>@OneToOne(mappedBy="author", fetch=EAGER, cascade=REMOVE)</td></tr>
+<tr><td>Profile→Author</td><td style="color:var(--d-high)">No</td><td>Profile</td><td>EAGER</td><td>None</td><td>@OneToOne(fetch=EAGER) @JoinColumn(name="author_id")</td></tr>
+<tr><td>Keyword→Article</td><td style="color:var(--d-low)">Sì (pat.2)</td><td>Article</td><td>LAZY</td><td>None</td><td>@ManyToMany(mappedBy="keywords", fetch=LAZY)</td></tr>
+<tr><td>Author→Article</td><td style="color:var(--d-low)">Sì (pat.1)</td><td>Article</td><td>LAZY</td><td>REMOVE</td><td>@OneToMany(mappedBy="mainAuthor", fetch=LAZY, cascade=REMOVE)</td></tr>
+</table>
+<div class="gbox info" style="margin-top:10px"><div class="gbox-label">Perché mappedBy = "author" e non "profile"?</div>
+<p style="font-size:12.5px">Author non è owner (lo è Profile). Quindi Author scrive mappedBy. Va a guardare la classe Profile e trova <code>private Author <b>author</b></code> → scrive <code>mappedBy = "author"</code>. Stessa logica per Keyword: va in Article, trova <code>private List&lt;Keyword&gt; <b>keywords</b></code> → scrive <code>mappedBy = "keywords"</code>.</p>
+</div>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio completo — Movie & Artist (TDE 2023)</div>
 <div class="gcode"><span class="kw">@Entity</span>
 <span class="kw">public class</span> Artist <span class="kw">implements</span> Serializable {
   <span class="kw">@Id @GeneratedValue</span>(strategy=GenerationType.IDENTITY)
