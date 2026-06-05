@@ -1395,6 +1395,16 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 }</div>
 <div class="gbox info"><div class="gbox-label">Regole obbligatorie</div>
 <ul><li>@Entity sulla classe</li><li>@Id su un campo (la chiave primaria)</li><li>implements Serializable</li><li>Costruttore senza argomenti (anche implicito va bene)</li></ul>
+</div>
+
+<div class="gbox warn"><div class="gbox-label">@Basic(fetch = LAZY) su @Lob — Perché?</div>
+<p><code>@Basic</code> si usa su <b>campi singoli</b> (non relazioni). Una foto è un <code>byte[]</code> da diversi MB. Senza LAZY, ogni volta che carichi l'entità carichi anche la foto — anche se non la mostri.</p>
+<p><code>@Basic(fetch = FetchType.LAZY) @Lob private byte[] photo</code> = "carica la foto solo quando qualcuno chiama <code>getPhoto()</code>"</p>
+<p><b>Regola:</b> <code>@Lob</code> va quasi sempre con <code>@Basic(fetch = LAZY)</code>.</p>
+</div>
+
+<div class="gbox info"><div class="gbox-label">GenerationType.AUTO vs IDENTITY</div>
+<p><b>IDENTITY</b>: il DB genera l'ID con auto-increment (tipico MySQL). <b>AUTO</b>: lasci che JPA scelga la strategia. All'esame vanno bene entrambi.</p>
 </div>`,
 
 `<h3 class="gsub">Tipi di relazione</h3>
@@ -1452,9 +1462,10 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <tr><td>EAGER</td><td>Subito, con l'entità principale</td><td>@ManyToOne, @OneToOne</td></tr>
 <tr><td>LAZY</td><td>Solo al primo accesso</td><td>@OneToMany, @ManyToMany</td></tr>
 </table>
-<div class="gbox info"><div class="gbox-label">Regola veloce</div>
-<p><b>ToOne → EAGER</b> (un singolo oggetto, pochi dati)<br>
-<b>ToMany → LAZY</b> (potenzialmente tanti oggetti)</p>
+<div class="gbox info"><div class="gbox-label">Regola veloce — Trucco mnemonico</div>
+<p>Guarda la <b>seconda parola</b> dell'annotazione:<br>
+<b>To<span style="color:var(--d-low)">One</span> → EAGER</b> (un singolo oggetto, pochi dati)<br>
+<b>To<span style="color:var(--d-high)">Many</span> → LAZY</b> (potenzialmente tanti oggetti)</p>
 </div>
 
 <div class="gbox danger"><div class="gbox-label">Ragionamento del prof: l'effetto moltiplicativo</div>
@@ -1488,6 +1499,7 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <li>Cancello Article → cancello le Keyword? <b>NO!</b> Sono condivise → <b>nessun cascade</b></li>
 </ul>
 <p><b>Mai CASCADE.REMOVE su @ManyToMany</b> — cancelleresti entità condivise!</p>
+<p style="margin-top:8px"><b>Indizio dal testo:</b> se dice che un'entità appartiene a <b>esattamente una</b> altra (1:1), cancellando il padre il figlio resta orfano → REMOVE. Es: "un Brand appartiene a esattamente una Category" → cancellando Category, cascada REMOVE su Brand.</p>
 </div>`,
 
 `<div class="gbox ex"><div class="gbox-label">Esempio — Author/Article/Keyword (TDE Gennaio 2026)</div>
