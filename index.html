@@ -1605,12 +1605,19 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <tr><td>Repeatable Read</td><td class="ok">No</td><td class="ok">No</td><td class="no">Possibile</td></tr>
 <tr><td>Serializable</td><td class="ok">No</td><td class="ok">No</td><td class="ok">No</td></tr>
 </table>
-<div class="gbox info"><div class="gbox-label">Definizioni delle anomalie</div>
-<ul>
-<li><b>Dirty read:</b> leggo dati scritti da una transazione non ancora committata</li>
-<li><b>Non-repeatable read:</b> rileggo la stessa riga e ottengo un valore diverso</li>
-<li><b>Phantom read:</b> rileggo con una WHERE e ottengo righe diverse (aggiunte/rimosse)</li>
-</ul>
+<div class="gbox danger"><div class="gbox-label">Le anomalie della concorrenza — spiegazione completa</div>
+<p style="margin-bottom:10px">Se uno schedule <b>non è serializzabile</b> (fuori da CSR e VSR), può presentare queste anomalie. Uno schedule serializzabile le evita tutte.</p>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Anomalia</th><th>Cosa succede</th><th>Esempio</th></tr>
+<tr><td><b>Dirty Read</b><br>(lettura sporca)</td><td>T1 legge un dato scritto da T2, ma T2 <b>non ha ancora fatto commit</b>. Se T2 fa abort, T1 ha letto un valore che non esiste.</td><td>w2(x) → r1(x) → abort2<br>T1 ha letto un "fantasma"</td></tr>
+<tr><td><b>Lost Update</b><br>(aggiornamento perso)</td><td>T1 e T2 leggono x, poi entrambe lo scrivono. La write di T1 viene <b>sovrascritta</b> da T2 senza che T2 abbia tenuto conto della modifica di T1.</td><td>r1(x) r2(x) w1(x) w2(x)<br>La modifica di T1 è persa</td></tr>
+<tr><td><b>Non-repeatable Read</b><br>(lettura non ripetibile)</td><td>T1 legge x due volte, ma tra le due letture T2 ha <b>modificato</b> x. T1 vede due valori diversi per lo stesso dato.</td><td>r1(x) w2(x) r1(x)<br>Le due letture danno risultati diversi</td></tr>
+<tr><td><b>Phantom Read</b><br>(lettura fantasma)</td><td>T1 esegue una query con WHERE due volte, ma tra le due T2 ha <b>inserito/cancellato righe</b>. T1 vede un set diverso di risultati.</td><td>T1: SELECT WHERE salary>50k → 10 righe<br>T2: INSERT riga con salary=60k<br>T1: stessa SELECT → 11 righe</td></tr>
+</table>
+<div class="gbox warn" style="margin-top:10px"><div class="gbox-label">All'esame: "H è anomaly-free?"</div>
+<p>Se H è <b>serializzabile</b> (CSR o VSR) → <b>sì</b>, è anomaly-free: equivale a un'esecuzione seriale.<br>
+Se H <b>non è serializzabile</b> → <b>no</b>, le anomalie sono possibili. Non serve trovare quale anomalia specifica: basta dire che non essendo serializzabile non può garantire di evitarle tutte.</p>
+</div>
 </div>`,
 
 `<h3 class="gsub">Cos'è un R-tree</h3>
