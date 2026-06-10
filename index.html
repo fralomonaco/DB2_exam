@@ -950,12 +950,34 @@ obj 4 e obj 7 (visti solo in alcune liste) → r.a. per completarli.<br>
   <p>Quando nessun elemento fuori dal top-k potrà mai superare il k-esimo, si ferma.</p>
 </div></div>
 </div>
+<div class="gbox danger"><div class="gbox-label">Il threshold τ in NRA — uguale a TA!</div>
+<p>Il threshold si calcola <b>esattamente come in TA</b>: ad ogni round prendi l'ultimo valore letto da ciascuna lista e calcoli f con quelli.</p>
+<p>Esempio con f = 4A + 2B + C:<br>
+Round 1: last A=1.00, last B=0.80, last C=0.60 → τ = 4(1.00)+2(0.80)+0.60 = <b>6.20</b><br>
+Round 2: last A=0.80, last B=0.65, last C=0.60 → τ = 4(0.80)+2(0.65)+0.60 = <b>5.10</b><br>
+Round 3: last A=0.70, last B=0.55, last C=0.50 → τ = 4(0.70)+2(0.55)+0.50 = <b>4.40</b></p>
+</div>
+
+<div class="gbox warn"><div class="gbox-label">Come calcolare lb e ub</div>
+<p><b>lb (lower bound)</b>: usa i valori noti + <b>0</b> per quelli mancanti (pessimistico).<br>
+<b>ub (upper bound)</b>: usa i valori noti + <b>l'ultimo valore visto in quella lista</b> per quelli mancanti (ottimistico — non possono essere più alti di così).</p>
+<p>Esempio: item 1 visto solo nella lista A con A=1.00, al round 1 (last B=0.80, last C=0.60):<br>
+lb = 4(1.00) + 2(<b>0</b>) + <b>0</b> = 4.00<br>
+ub = 4(1.00) + 2(<b>0.80</b>) + <b>0.60</b> = 6.20</p>
+</div>
+
+<div class="gbox info"><div class="gbox-label">Stopping condition NRA vs TA</div>
+<p><b>TA</b>: k-esimo score ≥ τ (confronto con la soglia).<br>
+<b>NRA</b>: il k-esimo <b>lb</b> nel buffer ≥ il massimo <b>ub</b> di tutti gli item fuori dal top-k, <b>e</b> ≥ τ.<br>
+In pratica: quando sei sicuro che nessun item fuori dal top-k potrà mai superare quelli dentro.</p>
+</div>
+
 <div class="gbox ex"><div class="gbox-label">Confronto FA / TA / NRA</div>
 <table class="gtbl">
 <tr><th>Algoritmo</th><th>Accessi casuali</th><th>Stopping criterion</th></tr>
-<tr><td>FA</td><td>Sì (fase 2)</td><td>k elementi comuni</td></tr>
-<tr><td>TA</td><td>Sì (ogni round)</td><td>k-esimo score ≥ soglia T</td></tr>
-<tr><td>NRA</td><td>No</td><td>lb k-esimo ≥ ub tutti gli altri</td></tr>
+<tr><td>FA</td><td>Sì (fase 2)</td><td>k elementi comuni in tutte le liste</td></tr>
+<tr><td>TA</td><td>Sì (ogni round)</td><td>k-esimo score ≥ soglia τ</td></tr>
+<tr><td>NRA</td><td>No</td><td>lb k-esimo ≥ ub tutti gli altri e ≥ τ</td></tr>
 </table>
 </div>`]
 },
