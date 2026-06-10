@@ -844,8 +844,22 @@ Questo è voluto: Obermarck accumula <b>conoscenza distribuita</b> tramite i mes
 <h3 class="gsub">k-Skyband</h3>
 <p style="font-size:13.5px;color:var(--ink-soft)">Il <b>k-skyband</b> include tutti gli elementi dominati da meno di k elementi. Lo skyline normale è il 1-skyband. Per calcolare il 2-skyband: conta quanti skyline-elements dominano ogni non-skyline; se meno di 2 → entra nel 2-skyband.</p>
 
-<div class="gbox info"><div class="gbox-label">Teorema chiave</div>
-<p>Skyline = insieme di tutti i potenziali top-1 per <b>qualsiasi funzione monotona</b>. Se usi solo combinazioni lineari (L1), i candidati top-1 sono solo quelli sul <b>guscio convesso</b> dello skyline.</p>
+<div class="gbox danger"><div class="gbox-label">Skyline, L1 e convex hull — chi può essere top-1?</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Famiglia di funzioni</th><th>Chi può essere top-1?</th></tr>
+<tr><td><b>Qualsiasi funzione monotona</b></td><td><b>Tutti</b> gli elementi dello skyline</td></tr>
+<tr><td><b>L1</b> = tutte le funzioni lineari w1·x + w2·y (w1, w2 ≥ 0)</td><td>Solo quelli sul <b>convex hull</b> (guscio convesso) dello skyline</td></tr>
+<tr><td><b>F ⊂ L1</b> = sottoinsiemi con vincoli (es. w1 &gt; w2)</td><td>Sottoinsieme ancora più ristretto del convex hull</td></tr>
+</table>
+<p style="margin-top:10px"><b>Perché il convex hull?</b> Una funzione lineare f = w1·x + w2·y definisce una "direzione" nello spazio. Il top-1 è il punto più estremo in quella direzione — e i punti estremi di un insieme sono esattamente quelli sul convex hull. I punti "dentro" il convex hull non saranno mai i più estremi per nessuna direzione.</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Gennaio 2025 (hotel)</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">Skyline = {a, h, b, e, i}. Lower is better (distanze). f(x,y) = w1·ts + w2·ch.</p>
+<ul style="font-size:12.5px;color:var(--ink-soft)">
+<li><b>L1 (tutti i pesi ≥ 0):</b> top-1 possibili = {<b>a, e, i</b>} (convex hull). h e b sono skyline ma "dentro" il guscio → nessuna retta li rende top-1.</li>
+<li><b>F con w1 &gt; w2:</b> i non può battere e. Perché? Score(i) &lt; Score(e) richiede w1·0.80+w2·0.10 &lt; w1·0.60+w2·0.20 → w1·0.20 &lt; w2·0.10 → w1 &lt; 0.5·w2 → <b>w1 &lt; w2</b>. Ma F richiede w1 &gt; w2! Quindi i è escluso → top-1 possibili = {<b>a, e</b>}.</li>
+</ul>
 </div>`,
 
 `<h3 class="gsub">Cos'è FA (Fagin's Algorithm)</h3>
