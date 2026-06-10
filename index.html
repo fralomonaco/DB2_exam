@@ -1031,6 +1031,26 @@ In pratica: quando sei sicuro che nessun item fuori dal top-k potrà mai superar
   <strong>Indice secondario: aggiunge un accesso per ogni puntatore</strong>
   <p>Foglie → puntatori → accesso al dato. Con tuple sparse: ogni puntatore = 1 I/O aggiuntivo. Con tuple clusterizzate: risparmio.</p>
 </div></div>
+</div>
+
+<h3 class="gsub">B+ tree con chiave composita</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Un B+ su <b>(A, B)</b> ordina prima per A, poi per B dentro ogni gruppo di A uguale. Questo permette lookup efficienti quando conosci <b>entrambi</b> i valori, o quando filtri su A e poi cerchi un B specifico.</p>
+
+<div class="gbox danger"><div class="gbox-label">Vantaggio chiave: lookup su entrambe le condizioni in un solo percorso</div>
+<p>Con B+ su (RouteTo, PassengerId), cercare RouteTo="New York" AND PassengerId=42 costa solo <b>i livelli del B+</b> (es. 3 I/O). Senza chiave composita dovresti: trovare tutti i ticket di New York (1200), poi filtrare per PassengerId.</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Gen 2025 scenario 3: hash su City + B+ composito su (RouteTo, PassengerId)</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">Passenger: 40K tuple, val(City)=500, hash su City (600 blocchi). Ticket: 300K tuple, B+ composito su (RouteTo, PassengerId): 3 livelli, 6K foglie.</p>
+<ol style="font-size:12.5px;color:var(--ink-soft);line-height:2">
+<li><b>Hash su City="Los Angeles"</b>: 1 I/O (lookup diretto nel bucket)</li>
+<li><b>Segui 80 puntatori</b> ai passenger di LA (40K/500 = 80): 80 I/O</li>
+<li><b>Per ognuno dei 80 passenger</b>, cerca nel B+ composito (RouteTo="New York", PassengerId=X): il B+ è ordinato per RouteTo poi PassengerId → lookup diretto in <b>3 I/O</b> (2 intermedi + 1 foglia)</li>
+</ol>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);background:var(--bg);border-radius:7px;padding:8px 12px;margin-top:8px">
+Costo = 1 + 80 + 80 × 3 = <b style="color:var(--d-low)">321 I/O</b>
+</div>
+<p style="font-size:12px;color:var(--ink-soft);margin-top:8px"><b>Confronto:</b> senza B+ composito (scenario 2, hash su PassengerId): 1 + 80 + 80 × (1 + 7.5) = 761 I/O. Il B+ composito risparmia perché non devi leggere tutti i ticket del passeggero e poi filtrare — vai diretto ai ticket "New York" di quel passeggero.</p>
 </div>`,
 
 `<h3 class="gsub">Cos'è un Hash index</h3>
