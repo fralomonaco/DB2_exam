@@ -493,6 +493,25 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
   <p>In Strict 2PL i lock vengono rilasciati <b>solo al commit/abort</b>. Questo elimina le dirty read. Se 2PL fallisce → Strict 2PL fallisce automaticamente.</p>
 </div></div>
 </div>
+<div class="gbox danger"><div class="gbox-label">2PL vs Strict 2PL — definizioni chiare</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th></th><th>2PL</th><th>Strict 2PL</th></tr>
+<tr><td><b>Regola</b></td><td>Due fasi: prima <b>cresci</b> (acquisisci lock), poi <b>decresci</b> (rilasci). Una volta che rilasci o fai downgrade, non puoi più acquisire nuovi lock.</td><td>Tutti i lock vengono rilasciati <b>solo al commit/abort</b>. Nessun rilascio anticipato, nessun downgrade prima della fine.</td></tr>
+<tr><td><b>Downgrade</b> (XL→SL)</td><td><span style="color:var(--d-low)"><b>Permesso</b></span> — segna l'inizio della fase di decrescita</td><td><span style="color:var(--d-high)"><b>Non permesso</b></span> prima del commit</td></tr>
+<tr><td><b>Rilascio anticipato</b></td><td><span style="color:var(--d-low)"><b>Permesso</b></span> — purché non riacquisisca dopo</td><td><span style="color:var(--d-high)"><b>Non permesso</b></span></td></tr>
+<tr><td><b>Dirty read</b></td><td>Possibile (T_j può leggere dati di T_i prima del commit di T_i)</td><td><b>Impossibile</b> — nessuno legge i tuoi dati finché non fai commit</td></tr>
+</table>
+</div>
+
+<div class="gbox warn"><div class="gbox-label">Lock: SL (Shared) vs XL (Exclusive)</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th></th><th>SL (read)</th><th>XL (write)</th></tr>
+<tr><td><b>SL (read)</b></td><td><span style="color:var(--d-low)"><b>Compatibile</b></span> — tutti leggono</td><td><span style="color:var(--d-high)"><b>Incompatibile</b></span> — la write aspetta</td></tr>
+<tr><td><b>XL (write)</b></td><td><span style="color:var(--d-high)"><b>Incompatibile</b></span> — la read aspetta</td><td><span style="color:var(--d-high)"><b>Incompatibile</b></span> — la write aspetta</td></tr>
+</table>
+<p style="margin-top:8px;font-size:12px;color:var(--ink-soft)">SL protegge chi legge impedendo le write. XL protegge chi scrive impedendo tutto. <b>Downgrade</b> XL→SL: "ho finito di scrivere, ora permetto ad altri di leggere ma tengo il lock".</p>
+</div>
+
 <div class="gbox info"><div class="gbox-label">Intuizione — perché il 2PL garantisce la serializzabilità?</div>
 <p>La regola growing/shrinking crea un implicito <b>"punto di serializzazione"</b> per ogni transazione: il momento in cui rilascia il primo lock. Fino a quel punto T_i ha acquisito tutto quello che le serve (fase growing). Da quel momento in poi non può più cambiare idea (fase shrinking). Questo impone un ordine implicito: se T_j legge qualcosa che T_i ha scritto, T_j deve aspettare che T_i raggiunga il suo punto di serializzazione — il che crea un ordine seriale ben definito.</p>
 <p style="margin-top:6px"><b>Strict 2PL</b> va oltre: tenendo tutti i lock fino al commit, nessuna altra transazione può leggere valori "parziali" di T_i prima che T_i abbia finito (no dirty read).</p>
