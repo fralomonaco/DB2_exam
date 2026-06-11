@@ -1109,6 +1109,27 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <p style="font-size:12px;color:var(--ink-soft);margin-top:8px">Scannerizzare tutta la hash (10.5K) costa meno di 10K lookup individuali (13K). Il match CustID avviene in memoria → 0 I/O aggiuntivi.</p>
 </div>
 
+<div class="gbox danger"><div class="gbox-label">Puntatori da indice secondario: tuple vs blocchi (caching)</div>
+<p style="margin-bottom:10px">Quando segui N puntatori da un indice secondario, ogni puntatore va a un blocco dati. Quanti I/O servono?</p>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th></th><th>Dati ordinati sull'attributo di join</th><th>Dati sparsi (entry-sequenced)</th></tr>
+<tr><td><b>Senza caching</b></td><td>N I/O — rileggi lo stesso blocco ogni volta (butti via il blocco dopo ogni accesso)</td><td>N I/O</td></tr>
+<tr><td><b>Con caching</b></td><td><b>N / tuple_per_blocco</b> I/O — carichi il blocco una volta, i puntatori successivi allo stesso blocco sono già in memoria</td><td>N I/O — ogni puntatore va a un blocco diverso, il cache non aiuta</td></tr>
+</table>
+<p style="margin-top:10px;font-size:12.5px;color:var(--ink-soft)"><b>Perché il caching aiuta solo con dati ordinati?</b> Perché se le tuple di uno stesso valore sono <b>contigue</b>, i 333 puntatori puntano a soli 4 blocchi (333/100). Senza caching li ricaricheresti 83 volte ciascuno. Con il caching li carichi 1 volta e li tieni in memoria → 4 I/O invece di 333.</p>
+<p style="font-size:12.5px;color:var(--ink-soft)">Se i dati fossero sparsi, ogni puntatore andrebbe a un blocco diverso → caching inutile, sempre N I/O.</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Feb 2023 scenario 2 (hash join + caching)</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">CUSTOMER: 30K tuple, 5K blocchi, hash primaria su CustomerID. RECEIPT: 10M tuple, 100K blocchi, <b>ordinata per CustomerID</b>, hash secondaria su CustomerID (6.5K blocchi). val(City)=10 → 3K customer di Milan. Ogni customer ha 10M/30K = 333 receipt → 333/100 = ~4 blocchi.</p>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Piano</th><th>Costo</th></tr>
+<tr><td><b>Hash join senza caching</b>: 5K + 6.5K + 3K × 333 puntatori</td><td>≈ <b>1M</b> I/O</td></tr>
+<tr><td><b>Hash join con caching</b>: 5K + 6.5K + 3K × 4 blocchi</td><td>= <b>23.5K</b> I/O</td></tr>
+</table>
+<p style="font-size:12px;color:var(--ink-soft);margin-top:8px">Stessa hash join, ma col caching i 333 puntatori per customer finiscono su 4 blocchi già in memoria → 40× più veloce.</p>
+</div>
+
 <h3 class="gsub">Come scegliere il piano ottimale</h3>
 
 <div class="gbox danger"><div class="gbox-label">Prima di tutto: leggi bene la traccia e segna questi dati</div>
