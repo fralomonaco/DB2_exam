@@ -542,6 +542,20 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 <p style="margin-top:8px"><b>In pratica:</b> TS Multi non killa mai sulle letture — la transazione legge semplicemente la versione giusta dal suo "snapshot". TS Mono invece killa se qualcuno ha già scritto una versione più recente.</p>
 </div>
 
+<div class="gbox info"><div class="gbox-label">TS Mono con Thomas Rule (TS')</div>
+<p>La Thomas Rule è una <b>variante di TS Mono</b> che evita kill inutili sulle write.</p>
+<p style="margin-top:8px"><b>TS Mono normale:</b> w_i(x) con WTM(x) > ts(i) → <span style="color:var(--d-high)"><b>KILL</b></span></p>
+<p><b>TS Mono + Thomas Rule:</b> w_i(x) con WTM(x) > ts(i) → <span style="color:var(--d-low)"><b>SKIP</b></span> (la write viene ignorata, non killata)</p>
+<p style="margin-top:8px;font-size:12.5px;color:var(--ink-soft)"><b>Perché funziona?</b> Se qualcuno con timestamp più alto ha già scritto x, la tua write è "vecchia" — il valore che scriveresti verrebbe comunque sovrascritto. Quindi tanto vale non scriverlo (skip) e lasciare la transazione continuare.</p>
+<table class="gtbl" style="font-size:12.5px;margin-top:10px">
+<tr><th>Operazione</th><th>TS Mono</th><th>TS Mono + Thomas Rule</th></tr>
+<tr><td>r_i(x) con WTM(x) > ts(i)</td><td><span style="color:var(--d-high)"><b>KILL</b></span></td><td><span style="color:var(--d-high)"><b>KILL</b></span> (uguale)</td></tr>
+<tr><td>w_i(x) con WTM(x) > ts(i)</td><td><span style="color:var(--d-high)"><b>KILL</b></span></td><td><span style="color:var(--d-low)"><b>SKIP</b></span> — ignora la write</td></tr>
+<tr><td>w_i(x) con RTM(x) > ts(i)</td><td><span style="color:var(--d-high)"><b>KILL</b></span></td><td><span style="color:var(--d-high)"><b>KILL</b></span> (uguale)</td></tr>
+</table>
+<p style="margin-top:10px;font-size:12px;color:var(--ink-soft)"><b>All'esame:</b> nella tabella RTM/WTM, quando una write viene skippata, scrivi "skipped" nella colonna Killed e <b>non aggiornare WTM</b>. La transazione continua normalmente.</p>
+</div>
+
 <div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0">
 <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em">ESEMPIO GUIDATO — TS MONO (RTM/WTM con kill)</div>
 <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 12px;margin-bottom:6px;overflow-x:auto;white-space:nowrap">
