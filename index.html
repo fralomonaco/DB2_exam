@@ -1066,6 +1066,16 @@ Costo = 1 + 80 + 80 × 3 = <b style="color:var(--d-low)">321 I/O</b>
   <p>Per WHERE A &gt; 10 o BETWEEN → devi usare B+ o scansione sequenziale.</p>
 </div></div>
 </div>
+<div class="gbox warn"><div class="gbox-label">Hash primaria vs secondaria</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th></th><th>Hash primaria</th><th>Hash secondaria</th></tr>
+<tr><td><b>Dove stanno i dati?</b></td><td><b>Dentro i bucket</b> — la hash È lo storage della tabella</td><td>I bucket contengono solo <b>puntatori</b> ai blocchi dati</td></tr>
+<tr><td><b>Lookup</b></td><td>1 I/O → hai la tupla</td><td>1 I/O (bucket) + 1 I/O (segui puntatore al dato)</td></tr>
+<tr><td><b>Hash join (scan completo)</b></td><td>Scan dei bucket = scan dei dati → <b>niente puntatori extra</b></td><td>Scan dei bucket + <b>N puntatori</b> ai blocchi dati</td></tr>
+</table>
+<p style="margin-top:8px;font-size:12px;color:var(--ink-soft)"><b>All'esame:</b> la hash primaria è quasi sempre sulla PK (es. Customer con hash su CustID). Le hash secondarie sono sugli attributi di join o filtro. Quando calcoli il costo, chiediti sempre: "i dati sono dentro la hash o devo seguire puntatori?"</p>
+</div>
+
 <div class="gbox info"><div class="gbox-label">Notazione</div>
 <p><b>t(R)</b> = tuple di R · <b>b(R)</b> = blocchi di R · <b>val(A)</b> = valori distinti di A<br>
 Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
