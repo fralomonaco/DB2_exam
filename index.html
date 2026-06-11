@@ -1110,6 +1110,19 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 </div>
 
 <h3 class="gsub">Come scegliere il piano ottimale</h3>
+
+<div class="gbox danger"><div class="gbox-label">Prima di tutto: leggi bene la traccia e segna questi dati</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Cosa cercare</th><th>Perché è importante</th></tr>
+<tr><td><b>Primary key</b> di ogni tabella</td><td>Se cerchi per PK, sai che c'è <b>al massimo 1 tupla</b> → lookup diretto (1 I/O con hash, livelli B+ con B+). Nella join: se il lato "1" ha la PK come attributo di join, ogni lookup restituisce 1 sola tupla.</td></tr>
+<tr><td><b>t(R)</b> e <b>b(R)</b> (tuple e blocchi)</td><td>Ti danno tuple per blocco = t/b. Servono per tutti i calcoli.</td></tr>
+<tr><td><b>val(A)</b> per ogni attributo nel WHERE</td><td>Selettività = t(R)/val(A). Ti dice quante tuple sopravvivono al filtro.</td></tr>
+<tr><td><b>Tipo di storage</b> (entry-sequenced, hash, ordinato)</td><td>Entry-sequenced = nessun ordine. Hash = lookup O(1). Ordinato su X = le tuple con stesso X sono contigue → range query efficienti.</td></tr>
+<tr><td><b>Indici</b>: primario o secondario? B+ o hash?</td><td>Primario = dati dentro l'indice, no puntatori extra. Secondario = puntatori sparsi, 1 I/O per puntatore.</td></tr>
+<tr><td><b>Dati ordinati fisicamente</b> su quale attributo?</td><td>Se TRIP è ordinata per DriverID, le tuple di un driver sono <b>contigue</b> → leggi pochi blocchi consecutivi, non uno per tupla.</td></tr>
+</table>
+</div>
+
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
   <strong>Calcola quante tuple sopravvivono a ogni filtro WHERE</strong>
