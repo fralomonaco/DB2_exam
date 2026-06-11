@@ -1034,6 +1034,19 @@ In pratica: quando sei sicuro che nessun item fuori dal top-k potrà mai superar
 </div></div>
 </div>
 
+<div class="gbox danger"><div class="gbox-label">Regola fondamentale: tuple o blocchi? Dipende dall'indice!</div>
+<p style="margin-bottom:10px">Quando segui N puntatori da un indice, quanti I/O servono? <b>Non è sempre N.</b></p>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Tipo di indice</th><th>Dati ordinati sullo stesso attributo?</th><th>Costo per N risultati</th><th>Moltiplica per</th></tr>
+<tr><td><b>Primario</b> (dati nelle foglie)</td><td>—</td><td><b>0</b> — i dati li hai già letti</td><td>—</td></tr>
+<tr><td><b>Secondario</b> senza caching</td><td>qualsiasi</td><td><b>N</b> I/O</td><td><b>tuple</b> (1 I/O per puntatore)</td></tr>
+<tr><td><b>Secondario</b> con caching</td><td><b>Sì</b> (contigui)</td><td><b>N / tuple_per_blocco</b></td><td><b>blocchi</b></td></tr>
+<tr><td><b>Secondario</b> con caching</td><td><b>No</b> (sparsi)</td><td><b>N</b> I/O</td><td><b>tuple</b> (cache inutile)</td></tr>
+</table>
+<p style="margin-top:10px;font-size:12.5px;color:var(--ink-soft)"><b>Attenzione:</b> "ordinati sullo stesso attributo" = la tabella è fisicamente ordinata sull'attributo dell'indice. Es: RECEIPT ordinata per CustomerID e indice su CustomerID → contigui → caching funziona. Ma se cerchi con un indice su StoreID, le tuple sono sparse → ogni puntatore = 1 I/O.</p>
+<p style="font-size:12.5px;color:var(--ink-soft)"><b>All'esame:</b> chiediti sempre "l'indice è sull'attributo su cui i dati sono ordinati?" Se sì → blocchi. Se no → tuple.</p>
+</div>
+
 <h3 class="gsub">B+ tree con chiave composita</h3>
 <p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Un B+ su <b>(A, B)</b> ordina prima per A, poi per B dentro ogni gruppo di A uguale. Questo permette lookup efficienti quando conosci <b>entrambi</b> i valori, o quando filtri su A e poi cerchi un B specifico.</p>
 
