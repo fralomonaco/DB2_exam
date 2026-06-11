@@ -1332,7 +1332,48 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <p>Se T1 aggiorna tabella A che attiva T2 che aggiorna tabella A che attiva T1 → ciclo infinito. Serve una condizione WHEN che lo interrompa (es. IF NEW.val &lt;&gt; OLD.val).</p>
 </div>`,
 
-`<div class="gbox ex"><div class="gbox-label">Trigger classico — Aggiornare un totale (TDE Feb 2024)</div>
+`<div class="gbox danger"><div class="gbox-label">Strategia: CREATE TABLE + Trigger — chi fa cosa?</div>
+<p style="margin-bottom:10px">All'esame spesso ti danno uno schema ER collassato in tabelle e chiedono trigger per mantenere i vincoli. <b>Non tutto va nei trigger!</b> Alcuni vincoli si gestiscono meglio nella CREATE TABLE.</p>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Tipo di vincolo</th><th>Dove si gestisce</th><th>Esempio</th></tr>
+<tr><td>Attributi mutuamente esclusivi (prof ha level, admin ha role)</td><td><b>CHECK</b> nella CREATE TABLE</td><td><code>CHECK ((isProf AND level IS NOT NULL AND role IS NULL) OR (NOT isProf AND role IS NOT NULL AND level IS NULL))</code></td></tr>
+<tr><td>FK deve esistere</td><td><b>REFERENCES</b> nella CREATE TABLE</td><td><code>supervisor INT REFERENCES EMP(ID)</code></td></tr>
+<tr><td>FK deve avere una proprietà specifica (es. essere un prof)</td><td><b>Trigger</b> — CHECK non può fare query su altre righe</td><td>WHEN (EXISTS(SELECT * FROM EMP WHERE N.supervisor = EMP.ID AND EMP.isProf IS FALSE))</td></tr>
+<tr><td>Comportamento alla cancellazione</td><td><b>ON DELETE</b> nella FK</td><td><code>ON DELETE SET NULL</code>, <code>ON DELETE CASCADE</code>, <code>ON DELETE NO ACTION</code></td></tr>
+<tr><td>Vincolo cross-tabella (inserire in B solo se riga in A ha certe proprietà)</td><td><b>Trigger</b></td><td>ReportsTo solo se EMP.supervisor IS NOT NULL</td></tr>
+</table>
+<p style="margin-top:10px;font-size:12.5px;color:var(--ink-soft)"><b>Regola pratica:</b> se il vincolo riguarda solo i valori della riga stessa → CHECK. Se riguarda valori in altre righe o altre tabelle → Trigger. Le cancellazioni a cascata → ON DELETE nella FK.</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio completo — CREATE TABLE + Trigger (TDE lug 2025)</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">Schema: EMP (admin o prof), ReportsTo. Tre vincoli da gestire.</p>
+<div class="gcode"><span class="gcm">-- La CREATE TABLE gestisce: CHECK (vincolo 1), FK esistenza (vincolo 2 parziale), ON DELETE (cancellazioni)</span>
+<span class="kw">CREATE TABLE</span> EMP (
+  ID        <span class="kw">INT NOT NULL PRIMARY KEY</span>,
+  isProf    <span class="kw">BOOLEAN NOT NULL</span>,
+  name      <span class="kw">VARCHAR</span>(30) <span class="kw">NOT NULL</span>,
+  supervisor <span class="kw">INT REFERENCES</span> EMP(ID) <span class="kw">ON DELETE SET NULL</span>,  <span class="gcm">-- FK: esiste? ✓  È prof? serve trigger</span>
+  role      <span class="kw">CHAR</span>(15),
+  assistedEmp <span class="kw">INT REFERENCES</span> EMP(ID) <span class="kw">ON DELETE NO ACTION</span>,
+  level     <span class="kw">INT</span>,
+  <span class="kw">CONSTRAINT</span> SYNC <span class="kw">CHECK</span> (
+    (isProf <span class="kw">IS TRUE AND</span> level <span class="kw">IS NOT NULL AND</span> role <span class="kw">IS NULL</span>) <span class="kw">OR</span>
+    (isProf <span class="kw">IS FALSE AND</span> level <span class="kw">IS NULL AND</span> role <span class="kw">IS NOT NULL AND</span> assistedEmp <span class="kw">IS NOT NULL</span>))
+);
+
+<span class="kw">CREATE TABLE</span> ReportsTo (
+  EmpID <span class="kw">INT NOT NULL REFERENCES</span> EMP(ID) <span class="kw">ON DELETE CASCADE</span>,
+  date  <span class="kw">DATE NOT NULL</span>,
+  <span class="kw">PRIMARY KEY</span> (EmpID, date)
+);
+
+<span class="gcm">-- I trigger completano i vincoli che CHECK/FK non possono esprimere</span>
+<span class="gcm">-- Vincolo 2 completo: supervisor deve essere un PROF (non basta che esista)</span>
+<span class="gcm">-- Vincolo 3: ReportsTo solo se l'impiegato ha un supervisor</span></div>
+<p style="font-size:12px;color:var(--ink-soft);margin-top:8px"><b>Divisione:</b> Vincolo 1 → CHECK ✓ | Vincolo 2 → FK (esiste?) + Trigger (è prof?) | Vincolo 3 → FK (esiste?) + Trigger (ha supervisor?) | Cancellazioni → ON DELETE ✓</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Trigger classico — Aggiornare un totale (TDE Feb 2024)</div>
 <div class="gcode"><span class="gcm">-- assignment inserito → aggiungi salary al BUDGET del progetto</span>
 <span class="kw">CREATE TRIGGER</span> T4
 <span class="kw">AFTER INSERT ON</span> ASSIGNMENT <span class="kw">FOR EACH ROW</span>
