@@ -1160,7 +1160,7 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 <div class="gbox warn"><div class="gbox-label">Ragiona prima di calcolare: domande da farti</div>
 <table class="gtbl" style="font-size:12.5px">
 <tr><th>Domanda</th><th>Conseguenza</th></tr>
-<tr><td><b>La SELECT cosa chiede?</b> Solo un attributo o SELECT *?</td><td>Se chiede solo un attributo che è nella chiave del B+, puoi leggerlo <b>dalle foglie</b> senza accedere ai blocchi dati (index-only scan).</td></tr>
+<tr><td><b>La SELECT cosa chiede?</b> Solo un attributo o SELECT *?</td><td>Se chiede solo un attributo che è nella chiave del B+, puoi leggerlo <b>dalle foglie</b> senza accedere ai blocchi dati (index-only scan). Vale anche per <b>COUNT(*)</b> e <b>GROUP BY</b>: se conti tuple per un attributo che è la chiave del B+, basta contare i puntatori nelle foglie → <b>non serve seguirli</b>. Costo = solo i livelli del B+, niente +1 per i dati.</td></tr>
 <tr><td><b>Serve davvero la join?</b></td><td>Se la SELECT prende colonne da una sola tabella e l'altra serve solo per filtrare (IN/EXISTS), puoi partire dal lato che filtra e poi fare lookup. Non serve materializzare la join completa.</td></tr>
 <tr><td><b>Tabella ordinata sull'attributo di ricerca?</b></td><td>Se cerchi un valore e i dati sono <b>ordinati</b> su quello, puoi fermarti appena trovi tutte le tuple → in media scansioni <b>metà</b> della tabella (b/2), non tutta.</td></tr>
 <tr><td><b>Due hash con la stessa funzione?</b></td><td>Possibile <b>hash join</b>: scansiona entrambe le hash, match in memoria. Conviene quando hai tante tuple da cercare (N×overflow > blocchi_hash).</td></tr>
