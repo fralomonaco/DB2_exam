@@ -427,6 +427,16 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
   <p>Cerca uno schedule seriale (T_a, T_b, T_c…) con gli stessi <b>reads-from</b> e le stesse <b>final write</b>. Se esiste → VSR. Reads-from: chi ha scritto x subito prima di ogni lettura. Final write: chi scrive x per ultimo.</p>
 </div></div>
 </div>
+<div class="gbox danger"><div class="gbox-label">Definizione: reads-from, final write, blind write</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Concetto</th><th>Definizione</th><th>Come trovarla</th></tr>
+<tr><td><b>Reads-from</b></td><td>r_i(x) <b>reads-from</b> T_j se:<br>1. T_j ha scritto x (w_j(x))<br>2. r_i(x) viene dopo w_j(x)<br>3. <b>Non c'è nessun'altra write su x</b> tra w_j(x) e r_i(x)</td><td>Per ogni lettura r_i(x): guarda indietro nello schedule e trova l'ultima write su x. Se non ce n'è nessuna → reads-from T₀ (valore iniziale del DB).</td></tr>
+<tr><td><b>Final write</b></td><td>Per ogni risorsa x, l'<b>ultima write</b> su x nell'intero schedule</td><td>Scorri lo schedule al contrario: la prima write che trovi su x è la final write. Se nessuno scrive x → final write = T₀.</td></tr>
+<tr><td><b>Blind write</b></td><td>w_i(x) dove T_i <b>non ha mai letto x</b> prima di scriverla</td><td>Controlla se nella stessa transazione c'è una r_i(x) prima di w_i(x). Se no → blind write.</td></tr>
+</table>
+<p style="margin-top:10px;font-size:12.5px;color:var(--ink-soft)"><b>Per verificare VSR:</b> calcola reads-from e final write dello schedule S. Poi prova le permutazioni seriali (T_a, T_b, ...) e controlla se una ha gli <b>stessi</b> reads-from e final write. Se sì → S è VSR. Le blind write si possono spostare "gratis" perché nessuno ha letto il loro valore intermedio.</p>
+</div>
+
 <div class="gbox info"><div class="gbox-label">Intuizione — perché funziona la verifica VSR?</div>
 <p>Il risultato finale del DB dipende solo da due cose: <b>cosa ha letto ogni transazione</b> (reads-from) e <b>chi ha scritto l'ultimo valore</b> di ogni risorsa (final write). Tutto il resto (l'ordine interno di scritture intermedie) non conta perché nessun'altra transazione le ha lette. Quindi: se trovi uno schedule seriale con le stesse reads-from e final write → i due schedule producono esattamente gli stessi effetti sul DB → VSR.</p>
 <p style="margin-top:6px">Le <b>blind write</b> w_i(x) (T_i scrive x senza averla mai letta) sono "gratuite" da spostare: poiché nessuno ha letto il valore intermedio che sovrascrivono, spostarle non cambia nessuna reads-from.</p>
