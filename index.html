@@ -1076,6 +1076,28 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 (R = tabella esterna, S = tabella interna)</div>
 <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:14px">È quasi sempre il piano peggiore. Usalo come baseline. Metti come esterna la tabella più piccola (o quella con cui filtri di più).</p>
 
+<h3 class="gsub">Hash Join</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Quando hai una hash index secondaria sull'attributo di join, puoi scegliere tra <b>lookup individuali</b> o <b>scan completo della hash</b>. La hash join sceglie la seconda strategia.</p>
+
+<div class="gbox danger"><div class="gbox-label">Lookup individuali vs Scan completo della hash</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Strategia</th><th>Come funziona</th><th>Costo hash</th></tr>
+<tr><td><b>Lookup individuali</b></td><td>Per ogni tupla filtrata, fai un singolo accesso alla hash (1 bucket)</td><td>N × costo_overflow (es. N × 1.3)</td></tr>
+<tr><td><b>Hash join (scan completo)</b></td><td>Leggi <b>tutta</b> la hash index in un colpo → match in memoria → segui i puntatori</td><td>blocchi_hash (una volta sola)</td></tr>
+</table>
+<p style="margin-top:10px;font-size:12.5px;color:var(--ink-soft)"><b>Quando conviene la hash join?</b> Quando N × costo_overflow > blocchi_hash. Cioè: tante tuple filtrate × lookup singolo > scan completo della hash.</p>
+</div>
+
+<div class="gbox ex"><div class="gbox-label">Esempio — TDE Giu 2024 scenario 2 (Customer/Purchase)</div>
+<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">Customer: 800K tuple, 8K blocchi, val(Country)=160. Purchase: 8M tuple, 40K blocchi, hash secondaria su CustID (10.5K blocchi, overflow 1.3). Clienti Italy+Spain = 2×(800K/160) = 10K.</p>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Piano</th><th>Hash I/O</th><th>Puntatori</th><th>Totale</th></tr>
+<tr><td><b>Lookup individuali</b>: scan Customer + per ogni filtrato cerca nella hash</td><td>10K × 1.3 = 13K</td><td>10K × 10 = 100K</td><td>8K + 13K + 100K = <b>121K</b></td></tr>
+<tr><td><b>Hash join</b>: scan Customer + scan tutta la hash + match in memoria + segui puntatori</td><td>10.5K (una volta)</td><td>10K × 10 = 100K</td><td>8K + 10.5K + 100K = <b>118.5K</b></td></tr>
+</table>
+<p style="font-size:12px;color:var(--ink-soft);margin-top:8px">Scannerizzare tutta la hash (10.5K) costa meno di 10K lookup individuali (13K). Il match CustID avviene in memoria → 0 I/O aggiuntivi.</p>
+</div>
+
 <h3 class="gsub">Come scegliere il piano ottimale</h3>
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--phys)"></div><div class="gstep-b">
