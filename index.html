@@ -568,7 +568,7 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 <tr><td><b>Read r_i(x) con WTM(x) &gt; ts(i)</b></td><td><span style="color:var(--d-high)"><b>KILL</b></span> — il dato è stato sovrascritto</td><td><span style="color:var(--d-low)"><b>OK</b></span> — legge la versione con ts &#8804; ts(i)</td></tr>
 <tr><td><b>Write w_i(x) con RTM(x) &gt; ts(i)</b></td><td><span style="color:var(--d-high)"><b>KILL</b></span></td><td><span style="color:var(--d-high)"><b>KILL</b></span> (uguale)</td></tr>
 </table>
-<p style="margin-top:8px"><b>In pratica:</b> TS Multi non killa mai sulle letture — la transazione legge semplicemente la versione giusta dal suo "snapshot". TS Mono invece killa se qualcuno ha già scritto una versione più recente.</p>
+<p style="margin-top:8px"><b>In pratica:</b> TS Multi <b>non killa MAI sulle read</b> — trova sempre una versione con timestamp ≤ ts(i) da leggere (al peggio quella iniziale). Killa <b>solo sulle write</b>: quando qualcuno con timestamp maggiore ha già letto una versione che la tua write invaliderebbe. TS Mono invece killa anche sulle read se qualcuno ha già scritto una versione più recente.</p>
 </div>
 
 <div class="gbox info"><div class="gbox-label">TS Mono con Thomas Rule (TS')</div>
