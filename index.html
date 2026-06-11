@@ -1607,6 +1607,20 @@ Selettività di "A = valore": t(R) / val(A) tuple selezionate.</p>
 </ul>
 <p><b>Mai CASCADE.REMOVE su @ManyToMany</b> — cancelleresti entità condivise!</p>
 <p style="margin-top:8px"><b>Indizio dal testo:</b> se dice che un'entità appartiene a <b>esattamente una</b> altra (1:1), cancellando il padre il figlio resta orfano → REMOVE. Es: "un Brand appartiene a esattamente una Category" → cancellando Category, cascada REMOVE su Brand.</p>
+</div>
+
+<div class="gbox info"><div class="gbox-label">@OrderBy — ordinare le collezioni</div>
+<p>Si usa su campi <b>List</b> (non Set) per dire a JPA in che ordine caricare gli elementi dalla collezione.</p>
+<div class="gcode" style="margin:8px 0"><span class="kw">@OneToMany</span>(mappedBy=<span class="gstr">"director"</span>)
+<span class="kw">@OrderBy</span>(<span class="gstr">"issuedate DESC"</span>)
+<span class="kw">private</span> List&lt;Movie&gt; directedMovies;</div>
+<ul style="font-size:12.5px;color:var(--ink-soft)">
+<li><code>@OrderBy("campo ASC")</code> o <code>@OrderBy("campo DESC")</code> — ordina per quel campo</li>
+<li><code>@OrderBy</code> senza argomento → ordina per <b>primary key ASC</b></li>
+<li>Si può usare su <b>@OneToMany</b> e <b>@ManyToMany</b></li>
+<li>Il campo nell'argomento è il nome del campo Java dell'entità target, non il nome della colonna SQL</li>
+</ul>
+<p style="font-size:12px;color:var(--ink-soft);margin-top:8px"><b>All'esame:</b> se il testo dice "ordinati per data" o "dal più recente", aggiungi <code>@OrderBy</code>. Compare nei TDE Gen 2024 e Set 2022.</p>
 </div>`,
 
 `<div class="gbox ex"><div class="gbox-label">Esempio — Author/Article/Keyword (TDE Gennaio 2026)</div>
