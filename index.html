@@ -536,6 +536,45 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 </div>
 </div>
 
+<h3 class="gsub">Hierarchical Locking (lock gerarchici)</h3>
+<p style="font-size:14px;color:var(--ink-soft);margin-bottom:12px">Quando le risorse sono organizzate in una <b>gerarchia</b> (es. X(Y(A,B), W(C,D))), i lock si propagano dal basso verso l'alto con lock di <b>intenzione</b> (I = intention). Per lockare una risorsa devi prima lockare i suoi antenati con il lock di intenzione corrispondente.</p>
+
+<div class="gbox danger"><div class="gbox-label">I 5 tipi di lock gerarchici</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Lock</th><th>Significato</th><th>Quando si usa</th></tr>
+<tr><td><b>ISL</b> (Intent Shared)</td><td>Ho intenzione di <b>leggere</b> qualcosa sotto</td><td>Sui nodi antenati quando fai una read su un figlio</td></tr>
+<tr><td><b>IXL</b> (Intent Exclusive)</td><td>Ho intenzione di <b>scrivere</b> qualcosa sotto</td><td>Sui nodi antenati quando fai una write su un figlio</td></tr>
+<tr><td><b>SL</b> (Shared)</td><td>Leggo questa risorsa (e tutto ciò che sta sotto)</td><td>Sulla risorsa che leggi direttamente</td></tr>
+<tr><td><b>XL</b> (Exclusive)</td><td>Scrivo questa risorsa (e tutto ciò che sta sotto)</td><td>Sulla risorsa che scrivi direttamente</td></tr>
+<tr><td><b>SIXL</b> (Shared + Intent Exclusive)</td><td>Leggo tutto + ho intenzione di scrivere sotto</td><td>Raro — read su un nodo + write su un suo figlio</td></tr>
+</table>
+</div>
+
+<div class="gbox warn"><div class="gbox-label">Matrice di compatibilità</div>
+<table class="gtbl" style="font-size:12.5px;text-align:center">
+<tr><th></th><th>ISL</th><th>IXL</th><th>SL</th><th>SIXL</th><th>XL</th></tr>
+<tr><td><b>ISL</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-high)"><b>✗</b></td></tr>
+<tr><td><b>IXL</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td></tr>
+<tr><td><b>SL</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td></tr>
+<tr><td><b>SIXL</b></td><td style="color:var(--d-low)"><b>✓</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td></tr>
+<tr><td><b>XL</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td><td style="color:var(--d-high)"><b>✗</b></td></tr>
+</table>
+<p style="margin-top:10px;font-size:12.5px;color:var(--ink-soft)"><b>Regola veloce:</b> I + I = sempre ok. XL = incompatibile con tutto. SL + SL = ok. Il resto: se uno dei due è "pieno" (senza I) e l'altro è di tipo diverso → incompatibile.</p>
+</div>
+
+<div class="gbox info"><div class="gbox-label">Upgrade nei lock gerarchici</div>
+<p>Puoi fare <b>upgrade</b> (es. ISL → IXL, ISL → XL) solo se il lock a cui vuoi salire è <b>compatibile</b> con i lock che le <b>altre transazioni</b> hanno sulla stessa risorsa.</p>
+<table class="gtbl" style="font-size:12.5px;margin-top:8px">
+<tr><th>Upgrade</th><th>Quando funziona</th></tr>
+<tr><td>ISL → IXL</td><td>Se gli altri hanno solo ISL o IXL (tutti con la I → compatibili)</td></tr>
+<tr><td>ISL → SL</td><td>Se gli altri hanno solo ISL o SL (no IXL, no XL)</td></tr>
+<tr><td>ISL → XL</td><td>Solo se <b>nessun altro</b> ha lock su quella risorsa (XL incompatibile con tutto)</td></tr>
+<tr><td>IXL → XL</td><td>Solo se <b>nessun altro</b> ha lock su quella risorsa</td></tr>
+<tr><td>SL → XL</td><td>Solo se <b>nessun altro</b> ha lock su quella risorsa</td></tr>
+</table>
+<p style="margin-top:8px;font-size:12px;color:var(--ink-soft)"><b>All'esame:</b> quando vedi un upgrade nella tabella, controlla la matrice di compatibilità. Se il lock target è incompatibile con i lock degli altri → conflitto, la transazione aspetta.</p>
+</div>
+
 <h3 class="gsub">Passo 4 — TS Multi (Snapshot Isolation)</h3>
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
