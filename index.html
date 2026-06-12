@@ -582,7 +582,13 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 <tr><td>w_i(x) con WTM(x) > ts(i)</td><td><span style="color:var(--d-high)"><b>KILL</b></span></td><td><span style="color:var(--d-low)"><b>SKIP</b></span> — ignora la write</td></tr>
 <tr><td>w_i(x) con RTM(x) > ts(i)</td><td><span style="color:var(--d-high)"><b>KILL</b></span></td><td><span style="color:var(--d-high)"><b>KILL</b></span> (uguale)</td></tr>
 </table>
-<p style="margin-top:10px;font-size:12px;color:var(--ink-soft)"><b>All'esame:</b> nella tabella RTM/WTM, quando una write viene skippata, scrivi "skipped" nella colonna Killed e <b>non aggiornare WTM</b>. La transazione continua normalmente.</p>
+<p style="margin-top:10px;font-size:12.5px;color:var(--ink-soft)"><b>Quando killa Thomas Rule?</b> Solo in due casi — entrambi riguardano una <b>lettura già avvenuta</b> o una <b>scrittura già avvenuta</b> che non si può ignorare:</p>
+<table class="gtbl" style="font-size:12.5px;margin-top:6px">
+<tr><th>Situazione</th><th>Cosa succede</th><th>Perché non può skippare</th></tr>
+<tr><td><b>r_i(x)</b> con WTM(x) > ts(i)</td><td><span style="color:var(--d-high)"><b>KILL</b></span></td><td>Qualcuno più recente ha già <b>scritto</b> x → T_i leggerebbe un valore sbagliato (troppo nuovo)</td></tr>
+<tr><td><b>w_i(x)</b> con RTM(x) > ts(i)</td><td><span style="color:var(--d-high)"><b>KILL</b></span></td><td>Qualcuno più recente ha già <b>letto</b> x → skippare la write significherebbe che quel lettore ha letto il valore sbagliato</td></tr>
+</table>
+<p style="margin-top:8px;font-size:12px;color:var(--ink-soft)"><b>All'esame:</b> nella tabella RTM/WTM, quando una write viene skippata, scrivi "skipped" nella colonna Killed e <b>non aggiornare WTM</b>. La transazione continua normalmente.</p>
 </div>
 
 <div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0">
