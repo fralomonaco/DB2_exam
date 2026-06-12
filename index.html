@@ -575,6 +575,18 @@ S&nbsp;=&nbsp;<span style="color:var(--conc)">r1(Z)</span>&nbsp;<span style="col
 <p style="margin-top:8px;font-size:12px;color:var(--ink-soft)"><b>All'esame:</b> quando vedi un upgrade nella tabella, controlla la matrice di compatibilità. Se il lock target è incompatibile con i lock degli altri → conflitto, la transazione aspetta.</p>
 </div>
 
+<div class="gbox warn"><div class="gbox-label">Come svolgere l'esercizio passo per passo</div>
+<table class="gtbl" style="font-size:12.5px">
+<tr><th>Passo</th><th>Cosa fare</th></tr>
+<tr><td><b>1. Disegna la gerarchia</b></td><td>Es. X(Y(A,B), W(C,D)). Identifica il cammino dalla radice a ogni risorsa.</td></tr>
+<tr><td><b>2. Per ogni operazione</b></td><td>Read → <b>SL</b> sulla risorsa + <b>ISL</b> su tutti gli antenati.<br>Write → <b>XL</b> sulla risorsa + <b>IXL</b> su tutti gli antenati.</td></tr>
+<tr><td><b>3. Controlla la matrice</b></td><td>Per ogni lock da mettere: c'è un lock di un'<b>altra</b> transazione sulla stessa risorsa? Guarda la matrice. Se incompatibile → conflitto, la transazione <b>aspetta</b>.</td></tr>
+<tr><td><b>4. Upgrade</b></td><td>Se la <b>stessa</b> transazione ha già un lock più debole, fai upgrade. La matrice si controlla solo contro i lock degli <b>altri</b>, mai contro te stesso.</td></tr>
+<tr><td><b>5. Quando committa?</b></td><td>Ogni transazione committa dopo la sua <b>ultima operazione</b> nello schedule. Ma se è in attesa, deve prima sbloccarsi.</td></tr>
+<tr><td><b>6. Al commit</b></td><td>Rilascia <b>tutti</b> i lock della transazione. Chi era in attesa su quei lock si sblocca e può procedere.</td></tr>
+</table>
+</div>
+
 <h3 class="gsub">Passo 4 — TS Multi (Snapshot Isolation)</h3>
 <div class="gsteps">
 <div class="gstep"><div class="gstep-n" style="background:var(--conc)"></div><div class="gstep-b">
